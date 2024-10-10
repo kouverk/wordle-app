@@ -6,41 +6,48 @@ import { SharedModule } from '../modules/shared.module';
 import { MaterialModule } from '../modules/material.module';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-signup',
   standalone: true,
   imports: [SharedModule, MaterialModule],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  templateUrl: './signup.component.html',
+  styleUrls: ['./signup.component.css']
 })
-export class LoginComponent {
+export class SignupComponent {
   form: FormGroup = new FormGroup({
     username: new FormControl('', [Validators.required]),
-    password: new FormControl('', [Validators.required])
+    password: new FormControl('', [Validators.required]),
+    confirmPassword: new FormControl('', [Validators.required])
   });
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  login() {
-    if (this.form.valid) {
-      const credentials = this.form.value;
-      this.authService.login(credentials).subscribe(
+  signup() {
+    if (this.form.valid && this.passwordsMatch()) {
+      const credentials = {
+        username: this.form.value.username,
+        password: this.form.value.password
+      };
+      this.authService.signup(credentials).subscribe(
         (response: any) => {
           localStorage.setItem('token', response.token);
           this.router.navigate(['/game']);
         },
         (error) => {
-          console.error('Login failed', error);
+          console.error('Signup failed', error);
         }
       );
     }
   }
 
   onSubmit() {
-    this.login();
+    this.signup();
   }
 
-  // Navigate to signup
-  navigateToSignup() {
-    this.router.navigate(['/signup']);
+  passwordsMatch(): boolean {
+    return this.form.value.password === this.form.value.confirmPassword;
+  }
+
+  navigateToLogin() {
+    this.router.navigate(['/login']);
   }
 }

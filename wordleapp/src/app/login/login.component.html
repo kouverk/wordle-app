@@ -1,1 +1,24 @@
-<p>login works!</p>
+<mat-card class="login-card">
+  <h2>Welcome to Wordle Bitch!</h2>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Username</mat-label>
+      <input matInput formControlName="username" placeholder="Enter your username" required>
+      <mat-error *ngIf="form.get('username')?.invalid && form.get('username')?.touched">
+        Username is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Password</mat-label>
+      <input matInput type="password" formControlName="password" placeholder="Enter your password" required>
+      <mat-error *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+        Password is required
+      </mat-error>
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Login</button>
+    <div class="signup-link">
+      <button mat-button color="primary" (click)="navigateToSignup()">Create Account</button>
+    </div>
+  </form>
+</mat-card>
