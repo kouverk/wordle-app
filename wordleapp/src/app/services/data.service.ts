@@ -10,7 +10,12 @@ export class DataService {
 
   constructor(private http: HttpClient) { }
 
-  getgetsolution(): Observable<{ word: string }> {
+  getSolution(): Observable<{ word: string }> {
     return this.http.get<{ word: string }>(`${this.apiUrl}/get-solution`);
+  }
+
+  checkWord(word: string): Observable<{exists: boolean}>{
+    console.log(word)
+    return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-word/${word}`)
   }
 }

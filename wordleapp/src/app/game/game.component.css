@@ -1,3 +1,4 @@
+/*BOARD STYLES*/
 .game-card {
     padding: 20px;
     max-width: 600px;
@@ -95,4 +96,27 @@
     height: 58px;
 }
 
-
+/* WIGGLE ANIMAITON */
+/* Define wiggle animation */
+@keyframes wiggle {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-5px); /* Shake to the left */
+    }
+    40% {
+      transform: translateX(5px); /* Shake to the right */
+    }
+    60% {
+      transform: translateX(-5px); /* Shake to the left */
+    }
+    80% {
+      transform: translateX(5px); /* Shake to the right */
+    }
+  }
+  
+  .wiggle {
+    animation: wiggle 0.3s ease; /* Reduced the duration for a faster wiggle */
+  }
+  
