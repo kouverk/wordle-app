@@ -91,6 +91,7 @@ export class GameComponent {
 
   onEnterClick(): void {
     this.handleEnter();
+    console.log('This will handle checking attempted word against solution word')
   }
 
   onDeleteClick(): void {
