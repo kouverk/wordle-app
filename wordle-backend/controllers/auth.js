@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const app = express();
-const db = require('./db'); // MySQL connection
+const db = require('../db'); // MySQL connection
 app.use(express.json()); 
 
 const register = async (req, res) => {
@@ -60,3 +60,7 @@ const submit = (req, res) => {
             res.json({ message: 'Word submitted successfully' });
         });
 }
+
+
+
+module.exports = {register, login, start, submit}; 

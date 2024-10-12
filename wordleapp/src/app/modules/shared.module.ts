@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -12,8 +12,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     // Export common Angular modules
     FormsModule,
     ReactiveFormsModule,
-    CommonModule,
-    // Add any other Material or custom modules here
+    CommonModule
   ]
 })
 export class SharedModule {}

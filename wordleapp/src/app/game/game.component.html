@@ -1,30 +1,23 @@
-<mat-card class="game-card">
-    <h2>WORDLE</h2>
-  
-    <!-- Game Board -->
+<div class="game-card">
     <div class="board">
-      <div class="row" *ngFor="let row of board">
-        <div class="cell" *ngFor="let cell of row">
-          {{ cell }}
+        <div class="row" *ngFor="let row of board; let rowIndex = index">
+            <div class="cell" *ngFor="let cell of row">
+                {{ cell }}
+            </div>
         </div>
-      </div>
     </div>
-  
-    <!-- Keyboard -->
+
     <div id="keyboard">
         <div class="first-row">
-            <button class="key" *ngFor="let l of firstRow" value="l">{{l}}</button>
+            <button class="key" *ngFor="let key of firstRow" (click)="onLetterClick(key)">{{ key }}</button>
         </div>
         <div class="second-row">
-            <button class="key" *ngFor="let l of secondRow" value="l">{{l}}</button>
+            <button class="key" *ngFor="let key of secondRow" (click)="onLetterClick(key)">{{ key }}</button>
         </div>
         <div class="third-row">
-            <button class="key special-key" value="ENTER">ENTER</button>
-            <button class="key" *ngFor="let l of thirdRow" value="l">{{l}}</button>
-            <button class="key special-key">
-                <mat-icon aria-hidden="false" fontIcon="backspace"></mat-icon>
-            </button>
+            <button class="key special-key" (click)="onEnterClick()">ENTER</button>
+            <button class="key" *ngFor="let key of thirdRow" (click)="onLetterClick(key)">{{ key }}</button>
+            <button class="special-key" (click)="onDeleteClick()"><mat-icon aria-hidden="false" fontIcon="backspace"></mat-icon></button>
         </div>
     </div>
-  </mat-card>
-  
+</div>
