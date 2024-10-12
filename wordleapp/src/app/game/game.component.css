@@ -1,0 +1,98 @@
+.game-card {
+    padding: 20px;
+    max-width: 600px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+/* Board styling */
+.board {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+}
+
+/* Board cell styling */
+.cell {
+    width: 55px; 
+    height: 55px; 
+    border: 2px solid #ccc; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+    margin: 2px;
+    background-color: transparent;  
+    box-shadow: none;  
+}
+
+/* Keyboard styling */
+#keyboard {
+    display: flex;
+    flex-direction: column;
+}
+
+#keyboard .first-row,
+#keyboard .second-row,
+#keyboard .third-row {
+    display: flex;
+    justify-content: center;
+    margin: 2px 0;  
+}
+
+/* Individual key styling */
+.key,
+.special-key {
+    width: 42px; /* Standard width for keys */
+    height: 58px;
+    border: none;
+    margin: 2px;  
+    font-size: 1.4em;
+    font-weight: bold;
+    font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+    background-color: #f0f0f0; /* Default key color */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;  
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.key:active,
+.special-key:active {
+    background-color: #ccc; /* Temporary darker color when clicked */
+}
+
+/* Remove focus outline and default focus styling */
+.key:focus,
+.special-key:focus {
+    outline: none; /* Remove the default focus outline */
+}
+
+/* Prevent focus border color when using physical keyboard */
+.key:focus-visible,
+.special-key:focus-visible {
+    outline: none; /* Disable focus styling */
+}
+
+/* Ensure active state doesn't apply focus styles */
+.key:focus:not(:active),
+.special-key:focus:not(:active) {
+    background-color: #f0f0f0; /* Keep original color when focus but not active */
+}
+
+/* Special keys: Enter and Delete */
+.special-key {
+    width: 80px; /* Wider for special keys */
+    height: 58px;
+}
+
+

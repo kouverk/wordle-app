@@ -1,1 +1,30 @@
-<p>game works!</p>
+<mat-card class="game-card">
+    <h2>WORDLE</h2>
+  
+    <!-- Game Board -->
+    <div class="board">
+      <div class="row" *ngFor="let row of board">
+        <div class="cell" *ngFor="let cell of row">
+          {{ cell }}
+        </div>
+      </div>
+    </div>
+  
+    <!-- Keyboard -->
+    <div id="keyboard">
+        <div class="first-row">
+            <button class="key" *ngFor="let l of firstRow" value="l">{{l}}</button>
+        </div>
+        <div class="second-row">
+            <button class="key" *ngFor="let l of secondRow" value="l">{{l}}</button>
+        </div>
+        <div class="third-row">
+            <button class="key special-key" value="ENTER">ENTER</button>
+            <button class="key" *ngFor="let l of thirdRow" value="l">{{l}}</button>
+            <button class="key special-key">
+                <mat-icon aria-hidden="false" fontIcon="backspace"></mat-icon>
+            </button>
+        </div>
+    </div>
+  </mat-card>
+  
