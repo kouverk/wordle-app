@@ -35,23 +35,23 @@
     transition: background-color 0.3s ease, transform 0.5s; /* Add smooth transition */
 }
 
-/* Flip Animation */
-.cell.flip {
-    animation: flip 0.5s forwards; /* Trigger the flip animation */
-    border:none;
-}
-
 @keyframes flip {
     0% {
-        transform: perspective(400px) rotateY(0deg);
+      transform: scaleY(1);
     }
+  
     50% {
-        transform: perspective(400px) rotateY(180deg);
+      transform: scaleY(0);
     }
-     100% {
-        transform: perspective(400px) rotateY(0deg); /* Flipping back to original state */
+  
+    100% {
+      transform: scaleY(1);
     }
+  }
 
+  .cell.flip {
+    animation: flip 525ms ease forwards;
+    border:none;
 }
 
 /* Background colors for letter states */

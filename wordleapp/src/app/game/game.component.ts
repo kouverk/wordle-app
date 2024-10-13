@@ -155,7 +155,7 @@ export class GameComponent {
 
         // Show the letter normally after flip
         cellElement.textContent = letter; 
-      }, index * 300);
+      }, index * 500);
     });
   }
 
