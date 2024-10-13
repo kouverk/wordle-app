@@ -2,7 +2,8 @@ import { Component, OnInit, Renderer2, ElementRef } from '@angular/core';
 import { MaterialModule } from '../modules/material.module';
 import { SharedModule } from '../modules/shared.module';
 import { DataService } from '../services/data.service';
-
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MessagesComponent } from './messages/messages.component';
 @Component({
   selector: 'app-game',
   standalone: true,
@@ -20,8 +21,12 @@ export class GameComponent {
   solution: string = ''; 
   currentWord: string = ''; 
   animationInProgress: boolean = false; 
+  newFlipDelay = 400; 
+  newColorDelay = this.newFlipDelay/2; 
+  nextRowDelay = this.newFlipDelay + this.newColorDelay; 
+  waveDuration = 400; 
 
-  constructor(private dataservice: DataService, private renderer: Renderer2, private el: ElementRef){}
+  constructor(private dataservice: DataService, private renderer: Renderer2, private el: ElementRef, private snackBar: MatSnackBar){}
 
   ngOnInit() {
     // Listen for keyboard events using Renderer2
@@ -119,7 +124,7 @@ export class GameComponent {
     attemptedWord.forEach((letter, index) => {
       setTimeout(() => {
         this.flipLetter(index, letter);
-      }, index * 500); // Adjust the timing here for the delay
+      }, index * this.newFlipDelay); // Adjust the timing here for the delay
     });
 
     // Move to the next row and update currentWord after the last animation
@@ -128,40 +133,86 @@ export class GameComponent {
       this.currentCol = 0;
       this.currentWord = attemptedWord.join('');
       this.animationInProgress = false;
-    }, attemptedWord.length * 500); // After all letters have flipped
+
+      // Check if the guessed word matches the solution
+      if (this.currentWord === this.solution) {
+        const currentRowElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow})`);
+        this.triggerWaveAnimation(currentRowElement); // Trigger wave animation
+        setTimeout(() => {
+          // this.openSnackbar('Great Job!');
+        }, 350); //This should be equal to the wave duration from the css
+      }
+    }, attemptedWord.length * this.nextRowDelay); // After all letters have flipped
   }
 
-  flipLetter(index: number, letter: string): void {
-    const currentAttempt = this.board[this.currentRow];
-    const correctWord = this.solution.split('');
+  flipLetter(index:number, letter:string): void {
+    const currentAttempt = this.board[this.currentRow]; // The current word attempt
+    const correctWord = this.solution.split('');        // The solution word split into letters
 
-    currentAttempt.forEach((letter, index) => {
-      const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow + 1}) .cell:nth-child(${index + 1})`);
-      const isCorrectPosition = letter === correctWord[index];
-      const isInSolution = correctWord.includes(letter) && !isCorrectPosition;
+    // Loop through each letter in the current word attempt
+    currentAttempt.forEach((letter: string, index: number) => {
+        const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow + 1}) .cell:nth-child(${index + 1})`);
+        const isCorrectPosition = letter === correctWord[index]; // Letter is in the correct position
+        const isInSolution = correctWord.includes(letter) && !isCorrectPosition; // Letter is in the word but in the wrong position
 
-      // Apply flip class
-      setTimeout(() => {
-        this.renderer.addClass(cellElement, 'flip');
+        // Set a delay to apply the flip animation sequentially, one by one
+        setTimeout(() => {
+            // Apply the flip animation
+            this.renderer.addClass(cellElement, 'flip');
 
-        // Set appropriate classes for colors
-        if (isCorrectPosition) {
-          this.renderer.addClass(cellElement, 'correct');
-        } else if (isInSolution) {
-          this.renderer.addClass(cellElement, 'present');
-        } else {
-          this.renderer.addClass(cellElement, 'absent');
-        }
+            // Once the cell flips, assign the correct color based on letter status
+            setTimeout(() => {
+                if (isCorrectPosition) {
+                    this.renderer.addClass(cellElement, 'correct'); // Green for correct position
+                } else if (isInSolution) {
+                    this.renderer.addClass(cellElement, 'present'); // Yellow for correct letter but wrong position
+                } else {
+                    this.renderer.addClass(cellElement, 'absent'); // Grey for absent letter
+                }
 
-        // Show the letter normally after flip
-        cellElement.textContent = letter; 
-      }, index * 500);
+                // Display the letter in the cell after the flip
+                cellElement.textContent = letter;
+
+                // Now update the virtual keyboard to reflect the same state
+                this.updateKeyboard(letter, isCorrectPosition ? 'correct' : isInSolution ? 'present' : 'absent');
+              }, this.newColorDelay); // Delay to finish the flip before changing the color
+        }, index * this.newFlipDelay); // Delay each flip to occur one after another
     });
-  }
+}
 
-  wiggleRow(rowIndex: number): void {
+updateKeyboard(letter: string, status: string): void {
+    const keyElement = this.el.nativeElement.querySelector(`.key[data-key="${letter.toLowerCase()}"]`);
+    if (keyElement) {
+        // Only update the key if it's not already marked as 'correct'
+        if (!keyElement.classList.contains('correct')) {
+            this.renderer.removeClass(keyElement, 'present');
+            this.renderer.removeClass(keyElement, 'absent');
+            this.renderer.addClass(keyElement, status); // Add the current status (correct, present, or absent)
+        }
+    }
+}
+
+triggerWaveAnimation(rowElement: HTMLElement): void {
+  const cells = rowElement.querySelectorAll('.cell');
+  
+  cells.forEach((cell, index) => {
+      setTimeout(() => {
+          this.renderer.addClass(cell, 'wave');
+      }, index * 100); // Stagger the animation for each letter
+  });
+}
+
+openSnackbar(message: string) {
+  this.snackBar.openFromComponent(MessagesComponent, {
+    data: { message: message},
+    duration: 3000, // Duration the snackbar will be visible
+    verticalPosition: 'top', // Position at the top of the screen
+    horizontalPosition: 'center' // Centered horizontally
+  });
+}
+
+wiggleRow(rowIndex: number): void {
     const rowElement = this.el.nativeElement.querySelectorAll('.row')[rowIndex];
-    console.log('here is rowElement', rowElement)
     if (rowElement) {
       rowElement.classList.add('wiggle');
       setTimeout(() => {

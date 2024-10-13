@@ -8,7 +8,7 @@ const modules = [
   MatCardModule,
   MatInputModule,
   MatButtonModule, 
-  MatIconModule 
+  MatIconModule, 
 ];
 
 @NgModule({

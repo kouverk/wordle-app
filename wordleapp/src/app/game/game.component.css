@@ -39,18 +39,17 @@
     0% {
       transform: scaleY(1);
     }
-  
     50% {
       transform: scaleY(0);
     }
-  
     100% {
       transform: scaleY(1);
     }
   }
 
   .cell.flip {
-    animation: flip 525ms ease forwards;
+    /* Play with this with newFlipDelay to alter the flip animation */
+    animation: flip 600ms ease forwards;
     border:none;
 }
 
@@ -68,6 +67,26 @@
 .cell.absent {
     background-color: rgba(120, 124, 126, 255); /* Grey color */
     color: white;
+}
+
+/* WAVE ANIMATION */
+@keyframes wave {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px); /* Wave peak */
+    }
+    100% {
+        transform: translateY(0); /* Return to normal */
+    }
+}
+
+.cell.wave {
+    /* Play with this with waveDelay to alter wave animation */
+    animation: wave 400ms ease forwards; /* Wave animation duration */
+    animation-duration: 0.2s;
+    animation-timing-function: ease-in-out;
 }
 
 /* Keyboard styling */
@@ -95,7 +114,6 @@
     font-weight: bold;
     font-family: 'Franklin Gothic Medium', Arial, sans-serif;
     background-color: #f0f0f0; /* Default key color */
-    display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 5px;  
@@ -132,6 +150,20 @@
     height: 58px;
 }
 
+.key.correct {
+    background-color: rgba(106, 170, 100, 255); /* Green color */
+    color: white;
+}
+
+.key.present {
+    background-color: rgba(202, 181, 88, 255); /* Yellow color */
+    color: white;
+}
+
+.key.absent {
+    background-color: rgba(120, 124, 126, 255); /* Grey color */
+    color: white;
+}
 /* WIGGLE ANIMATION */
 /* Define wiggle animation */
 @keyframes wiggle {
@@ -155,3 +187,4 @@
 .wiggle {
     animation: wiggle 0.3s ease; /* Reduced the duration for a faster wiggle */
 }
+

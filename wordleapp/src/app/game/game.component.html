@@ -11,14 +11,14 @@
 
     <div id="keyboard">
         <div class="first-row">
-            <button class="key" *ngFor="let key of firstRow" (click)="onLetterClick(key)">{{ key }}</button>
+            <button class="key" *ngFor="let key of firstRow" [attr.data-key]="key.toLowerCase()" (click)="onLetterClick(key)">{{ key }}</button>
         </div>
         <div class="second-row">
-            <button class="key" *ngFor="let key of secondRow" (click)="onLetterClick(key)">{{ key }}</button>
+            <button class="key" *ngFor="let key of secondRow" [attr.data-key]="key.toLowerCase()" (click)="onLetterClick(key)">{{ key }}</button>
         </div>
         <div class="third-row">
             <button class="key special-key" (click)="onEnterClick()">ENTER</button>
-            <button class="key" *ngFor="let key of thirdRow" (click)="onLetterClick(key)">{{ key }}</button>
+            <button class="key" *ngFor="let key of thirdRow" [attr.data-key]="key.toLowerCase()" (click)="onLetterClick(key)">{{ key }}</button>
             <button class="special-key" (click)="onDeleteClick()"><mat-icon aria-hidden="false" fontIcon="backspace"></mat-icon></button>
         </div>
     </div>
