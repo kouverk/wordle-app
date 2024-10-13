@@ -19,6 +19,7 @@ export class GameComponent {
   thirdRow: string[] = 'ZXCVBNM'.split('');
   solution: string = ''; 
   currentWord: string = ''; 
+  animationInProgress: boolean = false; 
 
   constructor(private dataservice: DataService, private renderer: Renderer2, private el: ElementRef){}
 
@@ -36,28 +37,11 @@ export class GameComponent {
     this.dataservice.getSolution().subscribe({
       next: (data) => {
         this.solution = data.word;
+        console.log(this.solution)
       },
       error: (error) => {
         console.error('Error fetching solution word:', error);
       },
-    });
-  }
-
-  checkWord(word: string): void {
-    this.dataservice.checkWord(word).subscribe({
-      next: (data) => {
-        if (data.exists) {
-          // Handle word success (e.g., update the board, mark word as valid)
-          this.currentRow++;
-          this.currentCol = 0;
-          this.currentWord = '';  // Reset current word after submission
-        } else {
-          this.wiggleRow(this.currentRow);
-        }
-      },
-      error: (error) => {
-        console.error('Error checking word:', error);
-      }
     });
   }
 
@@ -91,11 +75,21 @@ export class GameComponent {
     // Check if the current word is complete and can be submitted
     if (this.currentCol === 5) {      
       // Check if the word exists in the database
-      this.checkWord(this.currentWord);
+      this.dataservice.checkWord(this.currentWord).subscribe({
+        next: (data) => {
+          if (data.exists) {
+            // Handle word success (e.g., update the board, mark word as valid)
+            this.animateWord(this.board[this.currentRow]);
+          } else {
+            this.wiggleRow(this.currentRow);
+          }
+        },
+        error: (error) => {
+          console.error('Error checking word:', error);
+        }
+      });
       // Move to the next row after word submission
-    } else {
-      alert('Word must be 5 letters long!');
-    }
+    } 
   }
 
   handleDelete(): void {
@@ -117,6 +111,52 @@ export class GameComponent {
 
   onDeleteClick(): void {
     this.handleDelete();
+  }
+
+  animateWord(attemptedWord: string[]): void {
+    this.animationInProgress = true;
+    
+    attemptedWord.forEach((letter, index) => {
+      setTimeout(() => {
+        this.flipLetter(index, letter);
+      }, index * 500); // Adjust the timing here for the delay
+    });
+
+    // Move to the next row and update currentWord after the last animation
+    setTimeout(() => {
+      this.currentRow++;
+      this.currentCol = 0;
+      this.currentWord = attemptedWord.join('');
+      this.animationInProgress = false;
+    }, attemptedWord.length * 500); // After all letters have flipped
+  }
+
+  flipLetter(index: number, letter: string): void {
+    const currentAttempt = this.board[this.currentRow];
+    const correctWord = this.solution.split('');
+
+    currentAttempt.forEach((letter, index) => {
+      const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow + 1}) .cell:nth-child(${index + 1})`);
+      const isCorrectPosition = letter === correctWord[index];
+      const isInSolution = correctWord.includes(letter) && !isCorrectPosition;
+
+      // Apply flip class
+      setTimeout(() => {
+        this.renderer.addClass(cellElement, 'flip');
+
+        // Set appropriate classes for colors
+        if (isCorrectPosition) {
+          this.renderer.addClass(cellElement, 'correct');
+        } else if (isInSolution) {
+          this.renderer.addClass(cellElement, 'present');
+        } else {
+          this.renderer.addClass(cellElement, 'absent');
+        }
+
+        // Show the letter normally after flip
+        cellElement.textContent = letter; 
+      }, index * 300);
+    });
   }
 
   wiggleRow(rowIndex: number): void {

@@ -22,8 +22,8 @@
 .cell {
     width: 55px; 
     height: 55px; 
-    border: 2px solid #ccc; 
     display: flex;
+    border: 2px solid #ccc; 
     justify-content: center;
     align-items: center;
     font-size: 2rem;
@@ -32,6 +32,42 @@
     margin: 2px;
     background-color: transparent;  
     box-shadow: none;  
+    transition: background-color 0.3s ease, transform 0.5s; /* Add smooth transition */
+}
+
+/* Flip Animation */
+.cell.flip {
+    animation: flip 0.5s forwards; /* Trigger the flip animation */
+    border:none;
+}
+
+@keyframes flip {
+    0% {
+        transform: perspective(400px) rotateY(0deg);
+    }
+    50% {
+        transform: perspective(400px) rotateY(180deg);
+    }
+     100% {
+        transform: perspective(400px) rotateY(0deg); /* Flipping back to original state */
+    }
+
+}
+
+/* Background colors for letter states */
+.cell.correct {
+    background-color: rgba(106, 170, 100, 255); /* Green color */
+    color: white;
+}
+
+.cell.present {
+    background-color: rgba(202, 181, 88, 255); /* Yellow color */
+    color: white;
+}
+
+.cell.absent {
+    background-color: rgba(120, 124, 126, 255); /* Grey color */
+    color: white;
 }
 
 /* Keyboard styling */
@@ -96,7 +132,7 @@
     height: 58px;
 }
 
-/* WIGGLE ANIMAITON */
+/* WIGGLE ANIMATION */
 /* Define wiggle animation */
 @keyframes wiggle {
     0%, 100% {
@@ -114,9 +150,8 @@
     80% {
       transform: translateX(5px); /* Shake to the right */
     }
-  }
+}
   
-  .wiggle {
+.wiggle {
     animation: wiggle 0.3s ease; /* Reduced the duration for a faster wiggle */
-  }
-  
+}
