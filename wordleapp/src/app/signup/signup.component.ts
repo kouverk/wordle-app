@@ -4,6 +4,7 @@ import { FormControl, FormGroup, Validators, AbstractControl, ValidationErrors, 
 import { AuthService } from '../services/auth.service';
 import { SharedModule } from '../modules/shared.module';
 import { MaterialModule } from '../modules/material.module';
+import { MyErrorStateMatcher } from '../validators/error-state-matcher'; // Import the ErrorStateMatcher
 
 @Component({
   selector: 'app-signup',
@@ -14,29 +15,23 @@ import { MaterialModule } from '../modules/material.module';
 })
 export class SignupComponent {
   form: FormGroup;
+  matcher = new MyErrorStateMatcher();  // Initialize ErrorStateMatcher
 
   constructor(private authService: AuthService, private router: Router) {
     this.form = new FormGroup({
       username: new FormControl('', [Validators.required]),
       password: new FormControl('', [Validators.required]),
-      confirmPassword: new FormControl('', Validators.compose([Validators.required])),
-    }, this.passwordMatch('password', 'confirmPassword'));
-  };
+      confirmPassword: new FormControl('', Validators.compose([Validators.required]))
+    }, { validators: this.passwordMatch('password', 'confirmPassword') }); // Attach the custom validator to the form
+  }
 
   // Custom Validator: Ensures password and confirmPassword match
   passwordMatch(password: string, confirmPassword: string): ValidatorFn {
-    return (formGroup: AbstractControl): { [key: string]: any } | null => {
-      const passwordControl = formGroup.get(password);
-      const confirmPasswordControl = formGroup.get(confirmPassword);
+    return (control: AbstractControl): ValidationErrors | null => {
+      const passwordControl = control.get(password);
+      const confirmPasswordControl = control.get(confirmPassword);
 
       if (!passwordControl || !confirmPasswordControl) {
-        return null;
-      }
-
-      if (
-        confirmPasswordControl.errors &&
-        !confirmPasswordControl.errors['passwordMismatch']
-      ) {
         return null;
       }
 
@@ -49,6 +44,7 @@ export class SignupComponent {
       }
     };
   }
+
   signup() {
     if (this.form.valid) {
       const credentials = {
