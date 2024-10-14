@@ -1,6 +1,7 @@
 <mat-card class="signup-card">
     <h2 style="text-align: center;">Create an Account</h2>
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Username</mat-label>
         <input matInput formControlName="username" placeholder="Enter your username" required>
@@ -10,18 +11,20 @@
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Password</mat-label>
         <input matInput type="password" formControlName="password" placeholder="Enter your password" required>
-        <mat-error *ngIf="form.get('password')?.invalid && form.get('password')?.touched">Password is required</mat-error>
+        <mat-error *ngIf="form.get('password')!.invalid && form.get('password')?.touched">Password is required</mat-error>
       </mat-form-field>
   
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Confirm Password</mat-label>
         <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm your password" required>
-        <mat-error *ngIf="!passwordsMatch() && form.get('confirmPassword')?.touched">Passwords must match</mat-error>
+        <!-- Display error when passwords mismatch and confirmPassword field is dirty -->
+        <mat-error *ngIf="form.get('confirmPassword')!invalid">
+            Passwords do not match
+        </mat-error>
+   
       </mat-form-field>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!form.valid">Sign Up</button>
   
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Sign Up</button>
-  
-      <!-- Link to Login -->
       <div class="login-link">
         <button mat-button color="primary" (click)="navigateToLogin()">Log in</button>
       </div>

@@ -15,7 +15,6 @@ export class DataService {
   }
 
   checkWord(word: string): Observable<{exists: boolean}>{
-    console.log(word)
     return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-word/${word}`)
   }
 }
