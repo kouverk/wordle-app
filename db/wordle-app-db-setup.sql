@@ -1,3 +1,5 @@
+START TRANSACTION; 
+
 -- Create database if not exists
 CREATE DATABASE IF NOT EXISTS wordleapp;
 
@@ -19,7 +21,7 @@ CREATE TABLE IF NOT EXISTS words (
     word VARCHAR(5) NOT NULL UNIQUE
 );
 
--- Create games table
+-- Create multiplayer games table
 CREATE TABLE IF NOT EXISTS multiplayer_games (
     id INT AUTO_INCREMENT PRIMARY KEY,
     player1_id INT NOT NULL,
@@ -36,6 +38,7 @@ CREATE TABLE IF NOT EXISTS multiplayer_games (
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE
 );
 
+-- Create single player games table
 CREATE TABLE IF NOT EXISTS single_player_games (
     id INT AUTO_INCREMENT PRIMARY KEY,
     player_id INT NOT NULL,
@@ -43,12 +46,11 @@ CREATE TABLE IF NOT EXISTS single_player_games (
     current_turn_num INT NOT NULL, 
     status ENUM('in_progress', 'completed'),
     completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (player1_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (player_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE
-
 );
 
--- Create game attempts table
+-- Create multiplayer game attempts table
 CREATE TABLE IF NOT EXISTS multiplayer_game_attempts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     game_id INT NOT NULL,
@@ -57,9 +59,10 @@ CREATE TABLE IF NOT EXISTS multiplayer_game_attempts (
     attempt_num INT NOT NULL,
     is_correct BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
+    FOREIGN KEY (game_id) REFERENCES multiplayer_games(id) ON DELETE CASCADE
 );
 
+-- Create single player game attempts table
 CREATE TABLE IF NOT EXISTS single_player_game_attempts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     game_id INT NOT NULL,
@@ -68,5 +71,7 @@ CREATE TABLE IF NOT EXISTS single_player_game_attempts (
     attempt_num INT NOT NULL,
     is_correct BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
+    FOREIGN KEY (game_id) REFERENCES single_player_games(id) ON DELETE CASCADE
 );
+
+COMMIT; 
