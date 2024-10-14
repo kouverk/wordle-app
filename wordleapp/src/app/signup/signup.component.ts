@@ -14,16 +14,16 @@ import { MyErrorStateMatcher } from '../validators/error-state-matcher'; // Impo
   styleUrls: ['./signup.component.css']
 })
 export class SignupComponent {
-  form: FormGroup;
-  matcher = new MyErrorStateMatcher();  // Initialize ErrorStateMatcher
+  form : FormGroup = new FormGroup({
+    username: new FormControl('', [Validators.required]),
+    password: new FormControl('', [Validators.required]),
+    confirmPassword: new FormControl('', Validators.compose([Validators.required]))
+  }, { validators: this.passwordMatch('password', 'confirmPassword') }); // Attach the custom validator to the form
 
   constructor(private authService: AuthService, private router: Router) {
-    this.form = new FormGroup({
-      username: new FormControl('', [Validators.required]),
-      password: new FormControl('', [Validators.required]),
-      confirmPassword: new FormControl('', Validators.compose([Validators.required]))
-    }, { validators: this.passwordMatch('password', 'confirmPassword') }); // Attach the custom validator to the form
   }
+  
+  matcher = new MyErrorStateMatcher();  // Initialize ErrorStateMatcher
 
   // Custom Validator: Ensures password and confirmPassword match
   passwordMatch(password: string, confirmPassword: string): ValidatorFn {
