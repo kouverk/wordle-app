@@ -2,8 +2,7 @@ import { Component, OnInit, Renderer2, ElementRef } from '@angular/core';
 import { MaterialModule } from '../modules/material.module';
 import { SharedModule } from '../modules/shared.module';
 import { DataService } from '../services/data.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MessagesComponent } from './messages/messages.component';
+
 @Component({
   selector: 'app-game',
   standalone: true,
@@ -25,8 +24,10 @@ export class GameComponent {
   newColorDelay = this.newFlipDelay/2; 
   nextRowDelay = this.newFlipDelay + this.newColorDelay; 
   waveDuration = 400; 
+  isVisible : boolean = false; 
+  message : string = ''; 
 
-  constructor(private dataservice: DataService, private renderer: Renderer2, private el: ElementRef, private snackBar: MatSnackBar){}
+  constructor(private dataservice: DataService, private renderer: Renderer2, private el: ElementRef){}
 
   ngOnInit() {
     // Listen for keyboard events using Renderer2
@@ -87,6 +88,7 @@ export class GameComponent {
             this.animateWord(this.board[this.currentRow]);
           } else {
             this.wiggleRow(this.currentRow);
+            this.showMessage('Not a word diva 😭', 1500)
           }
         },
         error: (error) => {
@@ -139,7 +141,7 @@ export class GameComponent {
         const currentRowElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow})`);
         this.triggerWaveAnimation(currentRowElement); // Trigger wave animation
         setTimeout(() => {
-          // this.openSnackbar('Great Job!');
+          this.showMessage('Great Job Pwincess 🤩', 2000)
         }, 350); //This should be equal to the wave duration from the css
       }
     }, attemptedWord.length * this.nextRowDelay); // After all letters have flipped
@@ -202,13 +204,13 @@ triggerWaveAnimation(rowElement: HTMLElement): void {
   });
 }
 
-openSnackbar(message: string) {
-  this.snackBar.openFromComponent(MessagesComponent, {
-    data: { message: message},
-    duration: 3000, // Duration the snackbar will be visible
-    verticalPosition: 'top', // Position at the top of the screen
-    horizontalPosition: 'center' // Centered horizontally
-  });
+showMessage(message:string, duration:number) {
+  this.message = message;
+  this.isVisible = true;
+  setTimeout(()=>{
+    this.message = '';
+    this.isVisible = false;
+  }, duration)
 }
 
 wiggleRow(rowIndex: number): void {

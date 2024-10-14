@@ -1,3 +1,4 @@
+<div class="message" *ngIf="isVisible">{{message}}</div>
 <div class="game-card">
     <div class="board">
         <div class="row" *ngFor="let row of board; let rowIndex = index">

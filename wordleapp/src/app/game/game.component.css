@@ -49,7 +49,7 @@
 
   .cell.flip {
     /* Play with this with newFlipDelay to alter the flip animation */
-    animation: flip 600ms ease forwards;
+    animation: flip 550ms ease forwards;
     border:none;
 }
 
@@ -188,3 +188,20 @@
     animation: wiggle 0.3s ease; /* Reduced the duration for a faster wiggle */
 }
 
+/* Message Styling */
+.message {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    /* width: 100px; */
+    background-color: #2f3033;/* Green background */
+    color: white;
+    text-align: center;
+    padding: 15px;
+    font-size: 20px;
+    font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+    padding:15px;
+    z-index: 9999; /* Make sure it floats above everything */
+    border-radius:5px;
+  }
