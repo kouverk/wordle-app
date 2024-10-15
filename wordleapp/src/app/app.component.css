@@ -1,0 +1,41 @@
+mat-toolbar {
+    height: 50px; 
+    min-height: 50px;
+  }
+
+.spacer {
+    flex: 1 1 auto;
+}
+
+.sidenav-title{
+    font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+} 
+
+.sidenav-container {
+  height: 100%;
+}
+
+.sidenav {
+  width: 250px;
+}
+
+.user-item {
+  cursor: pointer;
+  padding: 8px 0;
+}
+  
+/* Remove shadow from the mat-expansion-panel */
+.mat-expansion-panel {
+    box-shadow: none !important;
+  }
+  
+  /* Remove shadow from the mat-expansion-panel-header */
+  .mat-expansion-panel-header {
+    box-shadow: none !important;
+  }
+  
+  /* Optional: Remove any shadow from the expanded content as well */
+  .mat-expansion-panel-content {
+    box-shadow: none !important;
+  }
+  

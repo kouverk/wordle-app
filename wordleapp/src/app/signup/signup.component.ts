@@ -51,15 +51,15 @@ export class SignupComponent {
         username: this.form.value.username,
         password: this.form.value.password
       };
-      this.authService.signup(credentials).subscribe(
-        (response: any) => {
+      this.authService.signup(credentials).subscribe({
+        next: (response: any) => {
           localStorage.setItem('token', response.token);
           this.router.navigate(['/game']);
         },
-        (error) => {
+        error: (error) => {
           console.error('Signup failed', error);
         }
-      );
+      });
     }
   }
 

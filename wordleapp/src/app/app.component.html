@@ -1,1 +1,45 @@
-<router-outlet></router-outlet>
+<mat-sidenav-container class="sidenav-container">
+    <!-- Sidenav -->
+    <mat-sidenav #sidenav mode="over" [(opened)]="opened" class="sidenav">
+        <mat-nav-list>
+            <!-- Expansion Panel -->
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title class="sidenav-title">
+                  Select a multi-player game
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+          
+              <!-- User List -->
+              <div *ngFor="let user of users" (click)="startGameWithUser(user)" class="user-item">
+                <mat-list-item>
+                  {{ user.username }}
+                </mat-list-item>
+              </div>
+            </mat-expansion-panel>
+    </mat-nav-list>
+    </mat-sidenav>
+  
+    <!-- Main Content -->
+    <mat-sidenav-content>
+      <!-- Toolbar -->
+      <mat-toolbar>
+        <button mat-icon-button class="hamburger" (click)="sidenav.toggle()">
+            <mat-icon>menu</mat-icon>
+        </button>
+        <span class="spacer"></span>
+        <button mat-icon-button class="heart">
+            <mat-icon>favorite</mat-icon>
+        </button>
+        <button mat-icon-button class="settings">
+            <mat-icon>settings</mat-icon>
+        </button>
+    </mat-toolbar>
+  
+      <!-- Main content of the app -->
+      <div class="content">
+        <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+  

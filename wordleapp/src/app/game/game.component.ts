@@ -24,7 +24,7 @@ export class GameComponent {
   newColorDelay = this.newFlipDelay/2; 
   nextRowDelay = this.newFlipDelay + this.newColorDelay; 
   waveDuration = 400; 
-  isVisible : boolean = false; 
+  messageIsVisible : boolean = false; 
   message : string = ''; 
 
   constructor(private dataservice: DataService, private renderer: Renderer2, private el: ElementRef){}
@@ -206,10 +206,10 @@ triggerWaveAnimation(rowElement: HTMLElement): void {
 
 showMessage(message:string, duration:number) {
   this.message = message;
-  this.isVisible = true;
+  this.messageIsVisible = true;
   setTimeout(()=>{
     this.message = '';
-    this.isVisible = false;
+    this.messageIsVisible = false;
   }, duration)
 }
 

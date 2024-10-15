@@ -9,10 +9,6 @@ export class AuthService {
   private apiUrl = 'http://localhost:3000'; // Your backend URL
   constructor(private http: HttpClient) {}
 
-  register(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, userData);
-  }
-
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials);
   }
@@ -23,16 +19,13 @@ export class AuthService {
     // return !!(token && !this.jwtHelper.isTokenExpired(token));  
   }
   
-  
   logout() {
     localStorage.removeItem('token');
   }
 
   signup(credentials: { username: string; password: string }): Observable<any> {
-    return this.http.post('/signup', credentials);  // Example API endpoint
+    console.log('creds', credentials)
+    return this.http.post(`${this.apiUrl}/signup`, credentials);  // Example API endpoint
   }
 
-  getgetsolution(): Observable<{ word: string }> {
-    return this.http.get<{ word: string }>(this.apiUrl);
-  }
 }
