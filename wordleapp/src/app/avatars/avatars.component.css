@@ -1,0 +1,36 @@
+.avatar-container {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center align children */
+    margin: 0 auto; /* Center container itself */
+}
+
+.ripple-container {
+    position: relative; /* Ensure that positioning is relative */
+    overflow: visible;  /* Allow overflow for the ripple effect */
+}
+
+.avatar-title {
+    text-align: center; /* Center the title text */
+    font-size: 24px; /* Adjust font size */
+    margin-bottom: 10px; /* Space between title and gallery */
+    color: #4A4A4A; /* Change color if needed */
+}
+    
+.avatar-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    grid-gap: 10px; /* 20px gap between images */
+    max-width: 450px; /* Adjust as necessary */
+}
+
+.avatar-gallery img {
+    width: 100%; /* Make images responsive */
+    height: auto; /* Maintain aspect ratio */
+    cursor: pointer; /* Change cursor on hover */
+    transition: transform 0.2s; /* Smooth zoom effect */
+}
+
+.avatar-gallery img:hover {
+    transform: scale(1.05); /* Slight zoom effect on hover */
+}

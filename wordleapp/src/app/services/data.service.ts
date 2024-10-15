@@ -17,4 +17,8 @@ export class DataService {
   checkWord(word: string): Observable<{exists: boolean}>{
     return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-word/${word}`)
   }
+
+  getAvatars(): Observable<Array<object>> {
+    return this.http.get<Array<object>>(`${this.apiUrl}/get-avatars`)
+  }
 }

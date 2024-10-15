@@ -5,10 +5,9 @@ const app = express();
 const db = require('../db'); // MySQL connection
 app.use(express.json()); 
 
-const register = async (req, res) => {
+const signup = async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    
     db.query('INSERT INTO users (username, password) VALUES (?, ?)', 
         [username, hashedPassword], 
         (err, result) => {
@@ -20,6 +19,7 @@ const register = async (req, res) => {
     );
 };
 
+//Login 
 const login = async (req, res) => {
     const { username, password } = req.body;
     
@@ -41,6 +41,7 @@ const login = async (req, res) => {
     });
 }
 
+//Start a multiplayer game
 const start = (req, res) => {
     const { player1_id, player2_id } = req.body;
     
@@ -63,4 +64,4 @@ const submit = (req, res) => {
 
 
 
-module.exports = {register, login, start, submit}; 
+module.exports = {signup, login, start, submit};

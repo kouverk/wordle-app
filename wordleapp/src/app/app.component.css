@@ -21,7 +21,6 @@ mat-toolbar {
 
 .user-item {
   cursor: pointer;
-  padding: 8px 0;
 }
   
 /* Remove shadow from the mat-expansion-panel */
@@ -39,3 +38,7 @@ mat-toolbar {
     box-shadow: none !important;
   }
   
+  .aligned-icon {
+    vertical-align: middle;
+    margin-right: 5px;
+  }

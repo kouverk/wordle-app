@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
-import { SharedModule } from '../modules/shared.module';
-import { MaterialModule } from '../modules/material.module';
-import { MyErrorStateMatcher } from '../validators/error-state-matcher'; // Import the ErrorStateMatcher
+import { AuthService } from '../../services/auth.service';
+import { SharedModule } from '../../modules/shared.module';
+import { MaterialModule } from '../../modules/material.module';
+import { MyErrorStateMatcher } from '../../validators/error-state-matcher'; // Import the ErrorStateMatcher
 
 @Component({
   selector: 'app-signup',

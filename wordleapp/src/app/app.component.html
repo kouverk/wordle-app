@@ -6,15 +6,14 @@
             <mat-expansion-panel>
               <mat-expansion-panel-header>
                 <mat-panel-title class="sidenav-title">
-                  Select a multi-player game
+                    <span class="material-symbols-outlined" style="margin-right:10px">robot_2</span>
+                    multi-player games
                 </mat-panel-title>
               </mat-expansion-panel-header>
           
               <!-- User List -->
               <div *ngFor="let user of users" (click)="startGameWithUser(user)" class="user-item">
-                <mat-list-item>
-                  {{ user.username }}
-                </mat-list-item>
+                <mat-list-item><mat-icon class="aligned-icon">person</mat-icon>{{ user.username }}</mat-list-item>
               </div>
             </mat-expansion-panel>
     </mat-nav-list>

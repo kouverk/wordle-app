@@ -7,10 +7,10 @@ import { DataService } from '../services/data.service';
   selector: 'app-game',
   standalone: true,
   imports: [SharedModule, MaterialModule],
-  templateUrl: './game.component.html',
-  styleUrl: './game.component.css'
+  templateUrl: './board.component.html',
+  styleUrl: './board.component.css'
 })
-export class GameComponent {
+export class BoardComponent {
   board: string[][] = Array(6).fill(null).map(() => Array(5).fill('')); // 6 rows, 5 columns
   currentRow: number = 0; // To track the current row
   currentCol: number = 0; 

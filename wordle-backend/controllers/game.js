@@ -38,5 +38,18 @@ const checkWord = (req, res) => {
     });
 };
 
+const getAvatars = (req, res) => {
+  const word = req.params.word; 
+  
+  // Database query to check if the word exists
+  db.query('SELECT * FROM avatars', (err, results) => {
+      if (err) {
+          console.error('Database query failed:', err);  // Log the error
+          return res.status(500).json({ err: 'Database query failed' });
+      }        
+      return res.json(results);
+  });
+};
 
-module.exports = {getSolution, checkWord}
+
+module.exports = {getSolution, checkWord, getAvatars}

@@ -1,0 +1,20 @@
+<div class="avatar-container">
+    <div class="row">
+        <h2 class="avatar-title">✨ Please choose a cute avatar ✨</h2>
+    </div>
+    <div class="row">
+        <div class="avatar-gallery">
+            <div *ngFor="let avatar of avatars" 
+                [attr.id]="avatar.id" 
+                (click)="onSelection(avatar.id)"
+                class="ripple-container mat-elevation-z4"
+                matRipple
+                [matRippleCentered]="false"
+                [matRippleUnbounded]="false"
+                [matRippleRadius]="300"
+                [matRippleColor]="'#D8BFD8'">
+                <img [src]="avatar.url" alt="avatar"/>
+            </div>
+        </div>
+    </div>
+</div>
