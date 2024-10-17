@@ -16,7 +16,11 @@
                 <mat-list-item><mat-icon class="aligned-icon">person</mat-icon>{{ user.username }}</mat-list-item>
               </div>
             </mat-expansion-panel>
-    </mat-nav-list>
+        </mat-nav-list>
+        <div class="logout-button" (click)="logout()">
+            <span>Logout</span>
+            <mat-icon>logout</mat-icon>
+          </div>  
     </mat-sidenav>
   
     <!-- Main Content -->

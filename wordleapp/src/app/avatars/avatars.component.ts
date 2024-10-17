@@ -28,7 +28,13 @@ export class AvatarsComponent {
   }
 
   onSelection(id:number){
-    console.log('you selected number: ', id)
-    this.router.navigate(['/game'])
+    const user_id = Number(localStorage.getItem('user_id'))
+    this.dataservice.assignAvatar({user_id:user_id, avatar_num:id}).subscribe({
+      next: (response) => {
+        this.router.navigate(['/game'])
+      }, error: (error) => {
+        console.error('Error assinging avatar: ', error)
+      }
+    })
   }
 }

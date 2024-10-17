@@ -13,6 +13,7 @@ mat-toolbar {
 
 .sidenav-container {
   height: 100%;
+  position: relative;
 }
 
 .sidenav {
@@ -42,3 +43,25 @@ mat-toolbar {
     vertical-align: middle;
     margin-right: 5px;
   }
+
+
+  .logout-button {
+    margin: 10px;
+    position: absolute;
+    bottom: 0;
+    width: 90%;
+    display: flex;
+    justify-content: center; 
+    align-items: left;
+    padding: 10px;
+    cursor: pointer; 
+  }
+  
+  .logout-button mat-icon {
+    margin-left: 8px; 
+  }
+  
+  .logout-button:hover {
+    background-color: lightgrey; 
+  }
+  

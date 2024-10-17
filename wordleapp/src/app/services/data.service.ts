@@ -21,4 +21,8 @@ export class DataService {
   getAvatars(): Observable<Array<object>> {
     return this.http.get<Array<object>>(`${this.apiUrl}/get-avatars`)
   }
+
+  assignAvatar(payload:{user_id:number, avatar_num:number}): Observable<any> {
+    return this.http.post(`${this.apiUrl}/assign-avatar`, payload);  
+  }
 }

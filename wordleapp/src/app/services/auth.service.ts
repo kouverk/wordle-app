@@ -24,7 +24,6 @@ export class AuthService {
   }
 
   signup(credentials: { username: string; password: string }): Observable<any> {
-    console.log('creds', credentials)
     return this.http.post(`${this.apiUrl}/signup`, credentials);  // Example API endpoint
   }
 

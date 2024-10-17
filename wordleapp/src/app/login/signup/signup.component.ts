@@ -53,8 +53,11 @@ export class SignupComponent {
       };
       this.authService.signup(credentials).subscribe({
         next: (response: any) => {
+          // Store the token and userId
           localStorage.setItem('token', response.token);
-          this.router.navigate(['/game']);
+          localStorage.setItem('user_id', response.user_id);
+          // Navigate to avatar selection
+          this.router.navigate(['/avatars']);
         },
         error: (error) => {
           console.error('Signup failed', error);
@@ -62,6 +65,7 @@ export class SignupComponent {
       });
     }
   }
+  
 
   onSubmit() {
     this.signup();
