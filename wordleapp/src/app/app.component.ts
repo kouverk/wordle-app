@@ -22,16 +22,16 @@ export class AppComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit() {
-    this.users = [{username:'fane'}, {username:'greg'}]
     // // Fetch users from the server
-    // this.authService.getUsers().subscribe({
-    //   next: (data: any) => {
-    //     this.users = data.users;  // Assuming API returns a "users" array
-    //   },
-    //   error: (err) => {
-    //     console.error('Failed to fetch users', err);
-    //   }
-    // });
+    this.authService.getUsers().subscribe({
+      next: (data: any) => {
+        this.users = data 
+        console.log(this.users)
+      },
+      error: (err) => {
+        console.error('Failed to fetch users', err);
+      }
+    });
   }
 
   startGameWithUser(user: any) {
@@ -43,7 +43,7 @@ export class AppComponent {
   }
 
   logout(){
-    localStorage.removeItem('authToken'); // Assuming you store JWT in localStorage
+    localStorage.clear
     this.sidenav.close();
     // localStorage.clear(); // To clear all storage (if needed)
     // Redirect to the login page

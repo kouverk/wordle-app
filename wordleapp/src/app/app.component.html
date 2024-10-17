@@ -13,8 +13,11 @@
           
               <!-- User List -->
               <div *ngFor="let user of users" (click)="startGameWithUser(user)" class="user-item">
-                <mat-list-item><mat-icon class="aligned-icon">person</mat-icon>{{ user.username }}</mat-list-item>
-              </div>
+                <mat-list-item>
+                  <img [src]="user.avatar_url" alt="avatar" class="user-avatar" />
+                  {{ user.username }}
+                </mat-list-item>
+              </div>              
             </mat-expansion-panel>
         </mat-nav-list>
         <div class="logout-button" (click)="logout()">

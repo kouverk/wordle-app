@@ -7,6 +7,8 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
   private apiUrl = 'http://localhost:3000'; // Your backend URL
+  public loggedIn: boolean = false; 
+
   constructor(private http: HttpClient) {}
 
   login(credentials: any): Observable<any> {
@@ -25,6 +27,10 @@ export class AuthService {
 
   signup(credentials: { username: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/signup`, credentials);  // Example API endpoint
+  }
+
+  getUsers(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/get-users`); 
   }
 
 }
