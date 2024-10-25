@@ -31,7 +31,7 @@ export class AvatarsComponent {
     const user_id = Number(localStorage.getItem('user_id'))
     this.dataservice.assignAvatar({user_id:user_id, avatar_num:id}).subscribe({
       next: (response) => {
-        this.dataservice.uponLogin(response, false)
+        this.dataservice.uponLogin(response, null)
         this.router.navigate(['/game'])
       }, error: (error) => {
         console.error('Error assinging avatar: ', error)

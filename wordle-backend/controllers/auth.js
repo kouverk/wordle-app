@@ -147,7 +147,7 @@ const login = async (req, res) => {
                 avatar_num: userData.avatar_num,
                 avatar_url: userData.avatar_url
             },
-            isEmptyGame ? {} : mostRecentGame // Directly assign mostRecentGame or empty object
+            isEmptyGame ? null : mostRecentGame // Directly assign mostRecentGame or empty object
         ]);
     });
 };

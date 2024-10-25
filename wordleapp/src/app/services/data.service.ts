@@ -37,15 +37,41 @@ export class DataService {
       localStorage.setItem('avatar_url', userData.avatar_url)
       this.loggedIn = true;
     }
-    
-    //Update multiplayer game boolean
-    this.multiplayer_game = mostRecentGame && mostRecentGame.player2_id !== null;
 
-    if (this.multiplayer_game) {
-      console.log('load multiplayer')
-    } else {
-      console.log('load single player')
+    //Update multiplayer game boolean
+    this.multiplayer_game = mostRecentGame ? mostRecentGame.player2_id !== null : false;
+
+    // If no most recent game, start single player game
+    if (!mostRecentGame) {
+        this.startSinglePlayerGame();
+        return;
     }
+
+    // Load appropriate game based on multiplayer_game status
+    if (this.multiplayer_game) {
+        this.loadMultiplayerGame(mostRecentGame);
+    } else {
+        this.loadSinglePlayerGame(mostRecentGame);
+    }
+  }
+
+  loadSinglePlayerGame(mostRecentGame:any){
+
+  }
+
+  loadMultiplayerGame(mostRecentGame:any){
+
+  }
+
+  startSinglePlayerGame(){
+
+  }
+
+  retrieveMultiPlayerGame(player1_id:number, player2_id: number){
+
+  }
+
+  retrieveSinglePlayerGame(user_id:number){
 
   }
 }

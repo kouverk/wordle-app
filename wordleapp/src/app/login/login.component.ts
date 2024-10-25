@@ -31,6 +31,8 @@ export class LoginComponent {
         next: (response: any) => {
           console.log('Login successful');
           localStorage.setItem('token', response[0].token);
+          const userData = response[1]
+          const mostRecentGame = response[2]
           this.dataservice.uponLogin(response[1], response[2]);
           this.router.navigate(['/game']);
         }, 

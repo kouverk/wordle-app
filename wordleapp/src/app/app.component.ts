@@ -46,7 +46,7 @@ export class AppComponent {
   startSinglePlayer(){
     console.log('clicked')
     this.sidenav.close();
-    this.dataservice.uponLogin(null, false)
+    this.dataservice.uponLogin(null, null)
   }
 
   logout(){
