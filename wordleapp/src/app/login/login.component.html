@@ -16,7 +16,14 @@
         Password is required
       </mat-error>
     </mat-form-field>
+
     <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Login</button>
+    
+    <!-- Error message display -->
+    <div *ngIf="loginError" class="error-message" style="color: red; text-align: center;">
+      {{ loginError }}
+    </div>
+
     <div class="signup-link">
       <button mat-button color="primary" (click)="navigateToSignup()">Create Account</button>
     </div>

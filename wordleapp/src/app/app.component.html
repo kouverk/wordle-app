@@ -2,24 +2,31 @@
     <!-- Sidenav -->
     <mat-sidenav #sidenav mode="over" [(opened)]="opened" class="sidenav">
         <mat-nav-list>
-            <!-- Expansion Panel -->
+            <!-- Multi-Player Expansion Panel -->
             <mat-expansion-panel>
               <mat-expansion-panel-header>
                 <mat-panel-title class="sidenav-title">
-                    <span class="material-symbols-outlined" style="margin-right:10px">robot_2</span>
-                    multi-player games
+                  <span class="material-symbols-outlined" style="margin-right:10px">robot</span>
+                  multi-player games
                 </mat-panel-title>
               </mat-expansion-panel-header>
-          
               <!-- User List -->
               <div *ngFor="let user of users" (click)="startGameWithUser(user)" class="user-item">
                 <mat-list-item>
                   <img [src]="user.avatar_url" alt="avatar" class="user-avatar" />
                   {{ user.username }}
                 </mat-list-item>
-              </div>              
+              </div>
             </mat-expansion-panel>
-        </mat-nav-list>
+            <mat-divider></mat-divider>
+            <!-- Single Player Div (Styled like Accordion) -->
+            <div class="sidenav-title single-player" (click)="startSinglePlayer()">
+              <span class="material-symbols-outlined" style="margin-right:10px">robot_2</span>
+              single player
+            </div>
+          </mat-nav-list>          
+          
+          
         <div class="logout-button" (click)="logout()">
             <span>Logout</span>
             <mat-icon>logout</mat-icon>

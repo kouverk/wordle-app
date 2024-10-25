@@ -28,13 +28,24 @@ export class DataService {
     return this.http.post(`${this.apiUrl}/assign-avatar`, payload);  
   }
 
-  uponLogin(response:any, multiplayer_game:boolean){
-    localStorage.setItem('user_id', response.user_id)
-    localStorage.setItem('username', response.username)
-    localStorage.setItem('avatar_num', response.avatar_num)
-    localStorage.setItem('avatar_url', response.avatar_url)
-    this.loggedIn = true;
-    this.multiplayer_game = multiplayer_game; 
+  uponLogin(userData: any, mostRecentGame: any){
+    //response handles if this was fired from sign/login or not (from the sidenav of the app)
+    if (userData) {
+      localStorage.setItem('user_id', userData.user_id)
+      localStorage.setItem('username', userData.username)
+      localStorage.setItem('avatar_num', userData.avatar_num)
+      localStorage.setItem('avatar_url', userData.avatar_url)
+      this.loggedIn = true;
+    }
+    
+    //Update multiplayer game boolean
+    this.multiplayer_game = mostRecentGame && mostRecentGame.player2_id !== null;
+
+    if (this.multiplayer_game) {
+      console.log('load multiplayer')
+    } else {
+      console.log('load single player')
+    }
 
   }
 }

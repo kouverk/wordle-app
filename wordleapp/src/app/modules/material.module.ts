@@ -8,6 +8,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatRippleModule } from '@angular/material/core';
+import {MatDividerModule} from '@angular/material/divider';
 
 const modules = [
   MatCardModule,
@@ -18,7 +19,8 @@ const modules = [
   MatToolbarModule, 
   MatSidenavModule, 
   MatExpansionModule, 
-  MatRippleModule
+  MatRippleModule, 
+  MatDividerModule
 ];
 
 @NgModule({

@@ -5,6 +5,7 @@ import { MaterialModule } from './modules/material.module';
 import { AuthService } from './services/auth.service';
 import { SharedModule } from './modules/shared.module';
 import { MatSidenav } from '@angular/material/sidenav';
+import { DataService } from './services/data.service';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,7 @@ export class AppComponent {
   users: any[] = [];  // This will store the list of users
   @ViewChild('sidenav') sidenav!: MatSidenav; // Reference to the sidenav
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private dataservice: DataService, private router: Router) {}
 
   ngOnInit() {
     // // Fetch users from the server
@@ -40,6 +41,12 @@ export class AppComponent {
     // Logic to create a multiplayer game with the selected user
     // Assuming you have a route for starting a game with a user ID
     
+  }
+
+  startSinglePlayer(){
+    console.log('clicked')
+    this.sidenav.close();
+    this.dataservice.uponLogin(null, false)
   }
 
   logout(){

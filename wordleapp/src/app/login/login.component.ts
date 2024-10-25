@@ -20,20 +20,23 @@ export class LoginComponent {
     password: new FormControl('', [Validators.required])
   });
 
+  loginError: string | null = null; // Variable to hold error messages
+
   constructor(private authService: AuthService, private dataservice: DataService, private router: Router) {}
 
   login() {
     if (this.form.valid) {
       const credentials = this.form.value;
       this.authService.login(credentials).subscribe({
-        next: (response:any) => {
-          localStorage.setItem('token', response.token);
-          this.dataservice.uponLogin(response, true)
+        next: (response: any) => {
+          console.log('Login successful');
+          localStorage.setItem('token', response[0].token);
+          this.dataservice.uponLogin(response[1], response[2]);
           this.router.navigate(['/game']);
         }, 
         error: (error) => {
           console.error('Login failed', error);
-
+          this.loginError = error.error?.message || 'Invalid username or password'; // Update error message
         }
       });
     }
