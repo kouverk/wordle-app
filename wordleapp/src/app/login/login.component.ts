@@ -4,7 +4,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { SharedModule } from '../modules/shared.module';
 import { MaterialModule } from '../modules/material.module';
-import { DataService } from '../services/data.service';
+import { GameService } from '../services/game.service';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +22,7 @@ export class LoginComponent {
 
   loginError: string | null = null; // Variable to hold error messages
 
-  constructor(private authService: AuthService, private dataservice: DataService, private router: Router) {}
+  constructor(private authService: AuthService, private gameservice: GameService, private router: Router) {}
 
   login() {
     if (this.form.valid) {
@@ -30,10 +30,11 @@ export class LoginComponent {
       this.authService.login(credentials).subscribe({
         next: (response: any) => {
           console.log('Login successful');
-          localStorage.setItem('token', response[0].token);
-          const userData = response[1]
-          const mostRecentGame = response[2]
-          this.dataservice.uponLogin(response[1], response[2]);
+          localStorage.setItem('token', response.token);
+          const userData = response.user
+          const mostRecentGame = response.game
+          const attempts = response.attempts
+          this.gameservice.uponLogin(userData, mostRecentGame, attempts);
           this.router.navigate(['/game']);
         }, 
         error: (error) => {

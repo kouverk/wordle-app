@@ -12,7 +12,6 @@ export class AuthService {
   private jwtHelper: JwtHelperService; 
   constructor(private http: HttpClient) {
     this.jwtHelper = new JwtHelperService(); // Initialize it
-
   }
 
   login(credentials: any): Observable<any> {
@@ -29,7 +28,15 @@ export class AuthService {
   }
 
   signup(credentials: { username: string; password: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/signup`, credentials);  // Example API endpoint
+    return this.http.post(`${this.apiUrl}/signup`, credentials); 
+  }
+
+  getAvatars(): Observable<Array<object>> {
+    return this.http.get<Array<object>>(`${this.apiUrl}/get-avatars`)
+  }
+
+  assignAvatar(payload:{user_id:number, avatar_num:number}): Observable<any> {
+    return this.http.post(`${this.apiUrl}/assign-avatar`, payload);  
   }
 
   getUsers(): Observable<any> {

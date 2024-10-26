@@ -8,10 +8,10 @@ import { Game } from '../services/interfaces';
   selector: 'app-game',
   standalone: true,
   imports: [SharedModule, MaterialModule],
-  templateUrl: './board.component.html',
-  styleUrl: './board.component.css'
+  templateUrl: './game.component.html',
+  styleUrl: './game.component.css'
 })
-export class BoardComponent {
+export class GameComponent {
   game: Game | null = null;
   multiplayer: boolean = false; 
   board: string[][] = Array(6).fill(null).map(() => Array(5).fill('')); // 6 rows, 5 columns

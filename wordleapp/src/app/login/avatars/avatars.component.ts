@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
-import { DataService } from '../services/data.service';
-import { SharedModule } from '../modules/shared.module';
-import { MaterialModule } from '../modules/material.module';
+import { GameService } from '../../services/game.service';
+import { SharedModule } from '../../modules/shared.module';
+import { MaterialModule } from '../../modules/material.module';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-avatars',
@@ -14,10 +15,10 @@ import { Router } from '@angular/router';
 
 export class AvatarsComponent {
   avatars: any; 
-  constructor(private dataservice:DataService, private router: Router){}
+  constructor(private authservice:AuthService, private gameservice: GameService, private router: Router){}
 
   ngOnInit(){
-    this.dataservice.getAvatars().subscribe({
+    this.authservice.getAvatars().subscribe({
       next: (data) => {
         this.avatars = data
       },
@@ -29,9 +30,9 @@ export class AvatarsComponent {
 
   onSelection(id:number){
     const user_id = Number(localStorage.getItem('user_id'))
-    this.dataservice.assignAvatar({user_id:user_id, avatar_num:id}).subscribe({
+    this.authservice.assignAvatar({user_id:user_id, avatar_num:id}).subscribe({
       next: (response) => {
-        this.dataservice.uponLogin(response, null)
+        this.gameservice.uponLogin(response, null, null)
         this.router.navigate(['/game'])
       }, error: (error) => {
         console.error('Error assinging avatar: ', error)

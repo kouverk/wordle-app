@@ -58,99 +58,118 @@ const assignAvatar = (req, res) => {
       });
 }
 
-//Login 
+//Login, returns a most recent game state upon login 
 const login = async (req, res) => {
     const { username, password } = req.body;
 
-    const query = `
-        SELECT u.id AS user_id, u.username, u.password, u.avatar_num, a.url AS avatar_url, g.* 
+    // Step 1: Retrieve user data and determine game type
+    const userQuery = `
+        SELECT u.id AS user_id, u.username, u.password, u.avatar_num, a.url AS avatar_url, 
+               g.game_id, g.game_type 
         FROM users u 
         LEFT JOIN avatars a ON u.avatar_num = a.id 
         LEFT JOIN (
-            SELECT * FROM (
-                SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id, 
-                       u1.username AS player1_username, u2.username AS player2_username, player_turn, 
-                       current_turn_num, word, player1_score, player2_score, status, completed_at, 
-                       mpg.last_turn_time 
-                FROM multiplayer_games mpg 
-                LEFT JOIN users u1 ON mpg.player1_id = u1.id 
-                LEFT JOIN users u2 ON mpg.player2_id = u2.id 
-                WHERE u1.username = ? OR u2.username = ?
+            SELECT mpg.id AS game_id, 'multiplayer' AS game_type 
+            FROM multiplayer_games mpg 
+            LEFT JOIN users u1 ON mpg.player1_id = u1.id 
+            LEFT JOIN users u2 ON mpg.player2_id = u2.id 
+            WHERE u1.username = ? OR u2.username = ?
 
-                UNION ALL
+            UNION ALL
 
-                SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id AS player1_id, 
-                       NULL AS player2_id, u.username AS player1_username, NULL AS player2_username, 
-                       NULL AS player_turn, current_turn_num, word, NULL AS player1_score, 
-                       NULL AS player2_score, status, completed_at, spg.last_turn_time 
-                FROM single_player_games spg 
-                LEFT JOIN users u ON spg.player_id = u.id 
-                WHERE u.username = ?
-            ) AS games 
+            SELECT spg.id AS game_id, 'singleplayer' AS game_type 
+            FROM single_player_games spg 
+            LEFT JOIN users u ON spg.player_id = u.id 
+            WHERE u.username = ?
             ORDER BY last_turn_time DESC
             LIMIT 1
-        ) AS g ON u.username = ? 
+        ) AS g ON u.username = ?
         WHERE u.username = ?;
     `;
 
-    const params = Array(5).fill(username); // Create an array with 5 elements, all set to username
+    const params = Array(5).fill(username);
 
-    db.query(query, params, async (err, results) => {
+    db.query(userQuery, params, async (err, userResults) => {
         if (err) {
             console.error('Database error:', err);
-            return res.status(500).json({ error: err.message});
+            return res.status(500).json({ error: err.message });
         }
 
-        const userData = results[0]; // User data including most recent game data
+        const userData = userResults[0];
+        if (!userData) return res.status(404).json({ error: 'User not found' });
 
-        // Handle the case when no user data is found
-        if (!userData) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        // Check if the password is valid
         const isPasswordValid = await bcrypt.compare(password, userData.password);
-        
-        if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid password' });
-        }
-        
-        // Generate JWT token with user ID and avatar_num
-        const token = jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' });
-        
-        // Prepare the most recent game data, default to empty object if all fields are empty
-        const mostRecentGame = {
-            id: userData.game_id || null,
-            game_type: userData.game_type || null,
-            player1_id: userData.player1_id || null,
-            player2_id: userData.player2_id || null,
-            player1_username: userData.player1_username || null,
-            player2_username: userData.player2_username || null,
-            player_turn: userData.player_turn || null,
-            current_turn_num: userData.current_turn_num || null,
-            word: userData.word || null,
-            player1_score: userData.player1_score || null,
-            player2_score: userData.player2_score || null,
-            status: userData.status || null,
-            completed_at: userData.completed_at || null
-        };
+        if (!isPasswordValid) return res.status(401).json({ error: 'Invalid password' });
 
-        // Set mostRecentGame to an empty object if all fields are empty or null
-        const isEmptyGame = Object.values(mostRecentGame).every(value => value === null || value === '');
-        
-        // Return an array with 3 objects: token, user info, and most recent game
-        res.json([
-            { token },
-            { 
-                id: userData.user_id,
-                username: userData.username,
-                avatar_num: userData.avatar_num,
-                avatar_url: userData.avatar_url
-            },
-            isEmptyGame ? null : mostRecentGame // Directly assign mostRecentGame or empty object
-        ]);
+        // Step 2: Query specific game data based on game_type
+        let gameQuery, gameParams;
+        if (userData.game_type === 'multiplayer') {
+            gameQuery = `
+                SELECT id, 'multiplayer' AS game_type, player1_id, player2_id, player_turn, 
+                       current_turn_num, word, player1_score, player2_score, status, completed_at 
+                FROM multiplayer_games 
+                WHERE id = ?;
+            `;
+            gameParams = [userData.game_id];
+        } else {
+            gameQuery = `
+                SELECT id, 'singleplayer' AS game_type, player_id AS player1_id, 
+                       current_turn_num, word, status, completed_at 
+                FROM single_player_games 
+                WHERE id = ?;
+            `;
+            gameParams = [userData.game_id];
+        }
+
+        db.query(gameQuery, gameParams, (err, gameResults) => {
+            if (err) return res.status(500).json({ error: err.message });
+            const mostRecentGame = gameResults[0] || null;
+
+            // Step 3: Query attempt data based on game_id
+            let attemptsQuery;
+            if (userData.game_type === 'multiplayer') {
+                attemptsQuery = `
+                    SELECT * FROM multiplayer_game_attempts 
+                    WHERE game_id = ? 
+                    ORDER BY attempt_num ASC;
+                `;
+            } else {
+                attemptsQuery = `
+                    SELECT * FROM single_player_game_attempts 
+                    WHERE game_id = ? 
+                    ORDER BY attempt_num ASC;
+                `;
+            }
+
+            db.query(attemptsQuery, [userData.game_id], (err, attempts) => {
+                if (err) return res.status(500).json({ error: err.message });
+
+                // Construct response with user data, game data, and attempt data separately
+                const response = {
+                    token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' }),
+                    user: {
+                        id: userData.user_id,
+                        username: userData.username,
+                        avatar_num: userData.avatar_num,
+                        avatar_url: userData.avatar_url
+                    },
+                    game: mostRecentGame, // Return the most recent game object
+                    attempts // Return attempts separately
+                };
+
+                // If no recent game found, return game as null
+                if (!mostRecentGame) {
+                    response.game = null;
+                    response.attempts = null; 
+                }
+
+                res.json(response);
+            });
+        });
     });
 };
+
+
 
 
 module.exports = {signup, getAvatars, assignAvatar, login};

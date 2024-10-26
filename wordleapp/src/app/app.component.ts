@@ -5,7 +5,7 @@ import { MaterialModule } from './modules/material.module';
 import { AuthService } from './services/auth.service';
 import { SharedModule } from './modules/shared.module';
 import { MatSidenav } from '@angular/material/sidenav';
-import { DataService } from './services/data.service';
+import { GameService } from './services/game.service';
 
 @Component({
   selector: 'app-root',
@@ -20,7 +20,7 @@ export class AppComponent {
   users: any[] = [];  // This will store the list of users
   @ViewChild('sidenav') sidenav!: MatSidenav; // Reference to the sidenav
 
-  constructor(private authService: AuthService, private dataservice: DataService, private router: Router) {}
+  constructor(private authService: AuthService, private gameservice: GameService, private router: Router) {}
 
   ngOnInit() {
     // // Fetch users from the server
@@ -45,7 +45,7 @@ export class AppComponent {
 
   startSinglePlayer(){
     this.sidenav.close();
-    this.dataservice.uponLogin(null, null)
+    this.gameservice.uponLogin(null, null)
   }
 
   logout(){
