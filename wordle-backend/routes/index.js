@@ -3,7 +3,7 @@ const router = express.Router()
 //Auth handlers
 const {signup, getAvatars, assignAvatar, login} = require('../controllers/auth.js')
 //Game handlers
-const {getSolution, checkWord, getUsers, start, submit} = require('../controllers/game.js')
+const {getSolution, checkWord, retreiveMultiPlayerGame, getUsers, start, submit} = require('../controllers/game.js')
 
 //Auth routes
 router.post('/signup', signup) 
@@ -14,6 +14,7 @@ router.post('/login', login)
 //Game routes
 router.get('/get-solution', getSolution)
 router.get('/check-word/:word', checkWord)
+router.get('retreive-multiplayer-game', retreiveMultiPlayerGame)
 router.get('/get-users', getUsers)
 router.post('/game/start', start)
 router.post('/game/submit', submit)

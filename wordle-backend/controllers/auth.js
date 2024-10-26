@@ -16,7 +16,7 @@ const signup = async (req, res) => {
                 return res.status(500).json({ error: err.message });
             }
             const user_id = result.insertId;
-            const token = jwt.sign({ id: user_id }, 'your_jwt_secret', { expiresIn: '1h' });
+            const token = jwt.sign({ id: user_id }, 'your_jwt_secret', { expiresIn: '7d' });
             // Return the token and userId
             res.json({ message: 'User registered successfully', token: token, user_id: user_id });
         }
@@ -30,7 +30,7 @@ const getAvatars = (req, res) => {
     db.query('SELECT * FROM avatars', (err, results) => {
         if (err) {
             console.error('Get Avatar query failed:', err);  // Log the error
-            return res.status(500).json({ err: 'Get Avatar query failed' });
+            return res.status(500).json({ err: err.message });
         }        
         return res.json(results);
     });
@@ -87,7 +87,7 @@ const login = async (req, res) => {
                 LEFT JOIN users u ON spg.player_id = u.id 
                 WHERE u.username = ?
             ) AS games 
-            ORDER BY last_turn_time DESC, completed_at DESC 
+            ORDER BY last_turn_time DESC
             LIMIT 1
         ) AS g ON u.username = ? 
         WHERE u.username = ?;
@@ -98,7 +98,7 @@ const login = async (req, res) => {
     db.query(query, params, async (err, results) => {
         if (err) {
             console.error('Database error:', err);
-            return res.status(500).json({ error: 'Database error' });
+            return res.status(500).json({ error: err.message});
         }
 
         const userData = results[0]; // User data including most recent game data
@@ -116,7 +116,7 @@ const login = async (req, res) => {
         }
         
         // Generate JWT token with user ID and avatar_num
-        const token = jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '1h' });
+        const token = jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' });
         
         // Prepare the most recent game data, default to empty object if all fields are empty
         const mostRecentGame = {

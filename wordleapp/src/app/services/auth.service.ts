@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { JwtHelperService } from '@auth0/angular-jwt';
 
 @Injectable({
   providedIn: 'root'
@@ -8,18 +9,19 @@ import { Observable } from 'rxjs';
 export class AuthService {
   private apiUrl = 'http://localhost:3000'; // Your backend URL
   public loggedIn: boolean = false; 
+  private jwtHelper: JwtHelperService; 
+  constructor(private http: HttpClient) {
+    this.jwtHelper = new JwtHelperService(); // Initialize it
 
-  constructor(private http: HttpClient) {}
+  }
 
   login(credentials: any): Observable<any> {
-    console.log('this the creds we got bitch', credentials)
     return this.http.post(`${this.apiUrl}/login`, credentials);
   }
 
   isLoggedIn(): boolean {
-    return true
-    // const token = localStorage.getItem('token');
-    // return !!(token && !this.jwtHelper.isTokenExpired(token));  
+    const token = localStorage.getItem('token');
+    return !!(token && !this.jwtHelper.isTokenExpired(token));  
   }
   
   logout() {

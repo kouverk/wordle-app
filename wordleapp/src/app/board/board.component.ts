@@ -2,6 +2,7 @@ import { Component, OnInit, Renderer2, ElementRef } from '@angular/core';
 import { MaterialModule } from '../modules/material.module';
 import { SharedModule } from '../modules/shared.module';
 import { DataService } from '../services/data.service';
+import { Game } from '../services/interfaces';
 
 @Component({
   selector: 'app-game',
@@ -11,6 +12,8 @@ import { DataService } from '../services/data.service';
   styleUrl: './board.component.css'
 })
 export class BoardComponent {
+  game: Game | null = null;
+  multiplayer: boolean = false; 
   board: string[][] = Array(6).fill(null).map(() => Array(5).fill('')); // 6 rows, 5 columns
   currentRow: number = 0; // To track the current row
   currentCol: number = 0; 
@@ -30,12 +33,22 @@ export class BoardComponent {
   constructor(private dataservice: DataService, private renderer: Renderer2, private el: ElementRef){}
 
   ngOnInit() {
+    // load game
+    this.dataservice.game$.subscribe(game => {
+      this.game = game; // Update the component's game variable
+      if (this.game == null){
+        //Start single player game by retrieving a solution word
+        this.fetchSolution();
+        this.multiplayer = false;
+      } else {
+        this.multiplayer = true; 
+        //Fill this in to load the game 
+      }
+    });
     // Listen for keyboard events using Renderer2
     this.renderer.listen('window', 'keydown', (event: KeyboardEvent) => {
       this.handleKeyPress(event);
     });
-    // Retrieve solution word
-    this.fetchSolution();
   }
 
   // HTTP handling:

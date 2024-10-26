@@ -51,6 +51,29 @@ const getUsers = (req, res) => {
   });
 };
 
+//load multiplayer game
+const retreiveMultiPlayerGame = (req, res) => {
+  const { player1_id, player2_id } = req.body;
+  const query = `
+        SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id, 
+               u1.username AS player1_username, u2.username AS player2_username, player_turn, 
+               current_turn_num, word, player1_score, player2_score, status, completed_at, 
+               mpg.last_turn_time 
+        FROM multiplayer_games mpg 
+        LEFT JOIN users u1 ON mpg.player1_id = u1.id 
+        LEFT JOIN users u2 ON mpg.player2_id = u2.id 
+        WHERE u1.id = ? AND u2.id = ?
+        ORDER BY last_turn_time DESC
+        LIMIT 1
+        `
+  db.query(query, [player1_id, player2_id], 
+    (err, results) => {
+        if (err){ return res.status(500).json({ error: err.message }); }
+        res.json(results[0]);
+    });
+
+}
+
 //Start a multiplayer game
 const start = (req, res) => {
   const { player1_id, player2_id } = req.body;
@@ -74,4 +97,4 @@ const submit = (req, res) => {
 
 
 
-module.exports = {getSolution, checkWord, getUsers, start, submit}
+module.exports = {getSolution, checkWord, retreiveMultiPlayerGame, getUsers, start, submit}

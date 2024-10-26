@@ -44,7 +44,6 @@ export class AppComponent {
   }
 
   startSinglePlayer(){
-    console.log('clicked')
     this.sidenav.close();
     this.dataservice.uponLogin(null, null)
   }
