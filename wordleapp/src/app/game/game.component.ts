@@ -51,7 +51,6 @@ export class GameComponent implements OnInit {
     this.gameservice.attempts$.subscribe(attempts => {
       this.attempts = attempts; // Update attempts variable
       this.updateBoardWithAttempts(); // Update board display with attempts
-      //NEED TO UPDATE THE CLASSES OF THE BOARD AND THE VIRUTAL KEYBOARD HERE 
     });
 
     // Listen for keyboard events using Renderer2
@@ -76,12 +75,40 @@ export class GameComponent implements OnInit {
   // Update board based on attempts data
   updateBoardWithAttempts(): void {
     if (this.attempts) {
-      this.attempts.forEach(attempt => {
+      this.attempts.forEach((attempt, attemptIndex) => {
         const attemptRow = attempt.attempt_num - 1; // Assuming attempt_num is 1-based
-        this.board[attemptRow] = attempt.attempt.split(''); // Update the row with the attempt letters
+        const attemptLetters = attempt.attempt.split('');
+        const solutionLetters = this.solution.split('');
+
+        // Update each cell in the row based on the attempt letters
+        attemptLetters.forEach((letter, letterIndex) => {
+          const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${attemptRow + 1}) .cell:nth-child(${letterIndex + 1})`);
+          const isCorrectPosition = letter === solutionLetters[letterIndex];
+          const isInSolution = solutionLetters.includes(letter) && !isCorrectPosition;
+
+          // Place the letter and apply CSS classes directly
+          if (cellElement) {
+            cellElement.textContent = letter;
+            if (isCorrectPosition) {
+              this.renderer.addClass(cellElement, 'correct'); // Green for correct position
+            } else if (isInSolution) {
+              this.renderer.addClass(cellElement, 'present'); // Yellow for present but wrong position
+            } else {
+              this.renderer.addClass(cellElement, 'absent'); // Grey for absent letter
+            }
+          }
+
+          // Update the virtual keyboard state directly without animations
+          this.updateKeyboard(letter, isCorrectPosition ? 'correct' : isInSolution ? 'present' : 'absent');
+        });
       });
+
+      // Set the currentRow and currentCol to the next row after the last attempt
+      this.currentRow = this.attempts.length;
+      this.currentCol = 0;
     }
   }
+
 
   // Handle key press events
   handleKeyPress(event: KeyboardEvent): void {
