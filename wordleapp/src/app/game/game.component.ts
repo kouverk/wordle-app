@@ -51,6 +51,7 @@ export class GameComponent implements OnInit {
     this.gameservice.attempts$.subscribe(attempts => {
       this.attempts = attempts; // Update attempts variable
       this.updateBoardWithAttempts(); // Update board display with attempts
+      //NEED TO UPDATE THE CLASSES OF THE BOARD AND THE VIRUTAL KEYBOARD HERE 
     });
 
     // Listen for keyboard events using Renderer2
@@ -110,6 +111,7 @@ export class GameComponent implements OnInit {
   }
 
   handleEnter(): void {
+    console.log('this board', this.board)
     // Check if the current word is complete and can be submitted
     if (this.currentCol === 5) {      
       // Check if the word exists in the database
