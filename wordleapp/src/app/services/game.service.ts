@@ -26,6 +26,7 @@ export class GameService {
   }
 
   uponLogin(userData: User, mostRecentGame: Game | null, attempts: Attempts | null) {
+    console.log(userData)
     // Store basic user information in localStorage
     if (userData) {
         localStorage.setItem('user_id', userData.user_id.toString());

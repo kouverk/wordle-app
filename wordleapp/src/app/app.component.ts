@@ -45,13 +45,11 @@ export class AppComponent {
 
   startSinglePlayer(){
     this.sidenav.close();
-    this.gameservice.uponLogin(null, null)
   }
 
   logout(){
-    localStorage.clear
     this.sidenav.close();
-    // localStorage.clear(); // To clear all storage (if needed)
+    localStorage.clear();
     // Redirect to the login page
     this.router.navigate(['/login']);
   }

@@ -69,7 +69,7 @@ const login = async (req, res) => {
         FROM users u 
         LEFT JOIN avatars a ON u.avatar_num = a.id 
         LEFT JOIN (
-            SELECT mpg.id AS game_id, 'multiplayer' AS game_type 
+            SELECT mpg.id AS game_id, 'multiplayer' AS game_type, mpg.last_turn_time AS last_turn_time
             FROM multiplayer_games mpg 
             LEFT JOIN users u1 ON mpg.player1_id = u1.id 
             LEFT JOIN users u2 ON mpg.player2_id = u2.id 
@@ -77,7 +77,7 @@ const login = async (req, res) => {
 
             UNION ALL
 
-            SELECT spg.id AS game_id, 'singleplayer' AS game_type 
+            SELECT spg.id AS game_id, 'singleplayer' AS game_type, spg.last_turn_time AS last_turn_time
             FROM single_player_games spg 
             LEFT JOIN users u ON spg.player_id = u.id 
             WHERE u.username = ?
@@ -148,7 +148,7 @@ const login = async (req, res) => {
                 const response = {
                     token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' }),
                     user: {
-                        id: userData.user_id,
+                        user_id: userData.user_id,
                         username: userData.username,
                         avatar_num: userData.avatar_num,
                         avatar_url: userData.avatar_url
