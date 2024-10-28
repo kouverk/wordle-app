@@ -24,15 +24,18 @@ export class AppComponent {
 
   ngOnInit() {
     // // Fetch users from the server
-    this.authService.getUsers().subscribe({
-      next: (data: any) => {
-        this.users = data 
-        console.log(this.users)
-      },
-      error: (err) => {
-        console.error('Failed to fetch users', err);
-      }
-    });
+    if(this.authService.userIsLoggedIn()){
+      this.authService.getUsers().subscribe({
+        next: (data: any) => {
+          this.users = data 
+          console.log(this.users)
+        },
+        error: (err) => {
+          console.error('Failed to fetch users', err);
+        }
+      });
+    }
+
   }
 
   startGameWithUser(user: any) {
