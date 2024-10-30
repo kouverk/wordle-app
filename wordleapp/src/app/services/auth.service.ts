@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { isPlatformBrowser } from '@angular/common';
 
@@ -13,21 +13,41 @@ export class AuthService {
   public loggedIn: boolean = false; 
   private jwtHelper: JwtHelperService; 
   private isLoggedIn: boolean = false; 
+  private isLoggedInSubject = new BehaviorSubject<boolean>(false);
+  public isLoggedIn$ = this.isLoggedInSubject.asObservable();
 
   constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: object) {
     this.jwtHelper = new JwtHelperService(); // Initialize it
-    this.checkLoginStatus();
+    this.updateLoginStatus();
+  }
+
+  private updateLoginStatus(){
+    const isLoggedIn = this.checkLoginStatus();
+    this.isLoggedInSubject.next(isLoggedIn);
   }
 
   private checkLoginStatus() {
     if (isPlatformBrowser(this.platformId)) {
-      // Only access localStorage if we're in the browser
-      this.isLoggedIn = !!localStorage.getItem('token');
+      const token = localStorage.getItem('token');
+      return !!(token && !this.jwtHelper.isTokenExpired(token));
     }
+    return false;
   }
 
   login(credentials: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, credentials);
+    return new Observable((observer) => {
+      this.http.post(`${this.apiUrl}/login`, credentials).subscribe({
+        next: (response: any) => {
+          observer.next(response); // Pass response to the component
+          observer.complete();
+          if (isPlatformBrowser(this.platformId) && response.token) {
+            console.log('did you not hit this for some reason', response)
+            this.isLoggedInSubject.next(true); // Update login state
+          }
+        },
+        error: (err) => observer.error(err),
+      });
+    });
   }
 
   userIsLoggedIn(): boolean {

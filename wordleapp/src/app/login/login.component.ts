@@ -29,7 +29,6 @@ export class LoginComponent {
       const credentials = this.form.value;
       this.authService.login(credentials).subscribe({
         next: (response: any) => {
-          console.log('Login successful');
           localStorage.setItem('token', response.token);
           const userData = response.user
           const mostRecentGame = response.game

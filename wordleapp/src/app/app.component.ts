@@ -21,6 +21,7 @@ export class AppComponent {
   opened: boolean = false;
   users: User[] = []; // List of users
   loggedin_id: number | null = null;
+  isLoggedIn: boolean = false; 
   @ViewChild('sidenav') sidenav!: MatSidenav;
   @ViewChild('expansionPanel') expansionPanel!: MatExpansionPanel;
 
@@ -32,23 +33,34 @@ export class AppComponent {
 
   ngOnInit() {
     // Fetch users if the user is logged in
-    if (this.authService.userIsLoggedIn()) {
-      const user_id = localStorage.getItem('user_id');
-      if (user_id) {
-        this.loggedin_id = parseInt(user_id, 10);
-        this.authService.getUsers().subscribe({
-          next: (data: User[]) => {
-            // Filter out the logged-in user and assign the rest to this.users
-            this.users = data.filter(item => item?.user_id !== this.loggedin_id);
-          },
-          error: (err) => {
-            console.error('Failed to fetch users', err);
-          }
-        });
+    this.authService.isLoggedIn$.subscribe(isLoggedIn => {
+      console.log('are you not logged in dude? ', isLoggedIn)
+      this.isLoggedIn = isLoggedIn
+      if (isLoggedIn) {
+        const user_id = localStorage.getItem('user_id');
+        console.log('here is user_id', user_id)
+        if (user_id) {
+          console.log('did you not get the id', user_id)
+          this.loggedin_id = parseInt(user_id, 10);
+          this.loadUsers();
+        }
       } else {
-        console.error('User ID is not found in local storage.');
+        console.log('maybe youre htting this null login')
+        this.loggedin_id = null;
+        this.users = [];
       }
-    }
+    });
+  }
+
+  private loadUsers() {
+    this.authService.getUsers().subscribe({
+      next: (data: User[]) => {
+        this.users = data.filter(item => item?.user_id !== this.loggedin_id);
+      },
+      error: (err) => {
+        console.error('Failed to fetch users', err);
+      }
+    });
   }
 
   // Method to start a multiplayer game if logged in
@@ -76,15 +88,12 @@ export class AppComponent {
   logout() {
     this.sidenav.close();
     this.loggedin_id = null;
+    this.isLoggedIn = false; 
     this.users = [];
     localStorage.clear();
     this.router.navigate(['/login']);
   }
 
-  // Disable expansion panel if logged out
-  isExpansionPanelDisabled(): boolean {
-    return !this.loggedin_id;
-  }
 
   // Method to close the expansion panel when sidenav closes
   closeExpansionPanel() {

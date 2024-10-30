@@ -1,0 +1,24 @@
+.words-container {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    margin: 0 auto; 
+}
+
+.words-title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 10px; 
+    color: #4A4A4A; 
+}
+    
+.word {
+    padding: 16px;
+    margin-left: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+
+  }

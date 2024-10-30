@@ -1,9 +1,9 @@
 <mat-sidenav-container class="sidenav-container">
   <!-- Sidenav -->
-  <mat-sidenav #sidenav mode="over" [(opened)]="opened" (closedStart)="closeExpansionPanel()" class="sidenav" (click)="closeSidenav()">
+  <mat-sidenav #sidenav mode="over" [(opened)]="opened" (closedStart)="closeExpansionPanel()" class="sidenav" (click)="!isLoggedIn ? closeSidenav() : ''">
     <mat-nav-list>
       <!-- Multi-Player Expansion Panel with reference variable -->
-      <mat-expansion-panel [disabled]="isExpansionPanelDisabled()">
+      <mat-expansion-panel [disabled]="!isLoggedIn">
         <mat-expansion-panel-header>
           <mat-panel-title class="sidenav-title">
             <span class="material-symbols-outlined" style="margin-right:10px">robot</span>
@@ -20,7 +20,7 @@
       </mat-expansion-panel>
       <mat-divider></mat-divider>
       <!-- Single Player Div (Styled like Accordion) -->
-      <div class="sidenav-title single-player" [ngClass]="{'disabled': !loggedin_id}" (click)="loggedin_id ? startSinglePlayer() : null">
+      <div class="sidenav-title single-player" [ngClass]="{'disabled': !isLoggedIn}" (click)="isLoggedIn ? startSinglePlayer() : null">
         <span class="material-symbols-outlined" style="margin-right:10px">robot_2</span>
         single player
       </div>

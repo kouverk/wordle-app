@@ -44,7 +44,7 @@ export class GameComponent implements OnInit {
         this.multiplayer = false;
       } else {
         this.multiplayer = true; 
-        // Fill this in to load the game 
+        this.updateBoardWithAttempts();
       }
     });
 
