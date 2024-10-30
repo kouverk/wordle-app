@@ -40,7 +40,7 @@ const checkWord = (req, res) => {
 
 
 const getUsers = (req, res) => {
-  const query = `SELECT u.username, u.avatar_num, a.url as avatar_url FROM users u
+  const query = `SELECT u.username, u.id as user_id, u.avatar_num, a.url as avatar_url FROM users u
                  LEFT JOIN avatars as a on a.id = u.avatar_num`;
   db.query(query, (error, results) => {
     if (error) {
@@ -52,27 +52,190 @@ const getUsers = (req, res) => {
 };
 
 //load multiplayer game
-const retreiveMultiPlayerGame = (req, res) => {
-  const { player1_id, player2_id } = req.body;
-  const query = `
-        SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id, 
-               u1.username AS player1_username, u2.username AS player2_username, player_turn, 
-               current_turn_num, word, player1_score, player2_score, status, completed_at, 
-               mpg.last_turn_time 
-        FROM multiplayer_games mpg 
-        LEFT JOIN users u1 ON mpg.player1_id = u1.id 
-        LEFT JOIN users u2 ON mpg.player2_id = u2.id 
-        WHERE u1.id = ? AND u2.id = ?
-        ORDER BY last_turn_time DESC
-        LIMIT 1
-        `
-  db.query(query, [player1_id, player2_id], 
-    (err, results) => {
-        if (err){ return res.status(500).json({ error: err.message }); }
-        res.json(results[0]);
-    });
+const retrieveMultiPlayerGame = (req, res) => {
+  const { player1_id, player2_id } = req.query;
 
-}
+  // Step 1: Try to retrieve an existing multiplayer game
+  const selectQuery = `
+    SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id, 
+           u1.username AS player1_username, u2.username AS player2_username, player_turn, 
+           current_turn_num, word, player1_score, player2_score, status, completed_at, 
+           mpg.last_turn_time 
+    FROM multiplayer_games mpg 
+    LEFT JOIN users u1 ON mpg.player1_id = u1.id 
+    LEFT JOIN users u2 ON mpg.player2_id = u2.id 
+    WHERE (u1.id = ? AND u2.id = ?) OR (u1.id = ? AND u2.id = ?)
+    ORDER BY last_turn_time DESC
+    LIMIT 1
+  `;
+
+  db.query(selectQuery, [player1_id, player2_id, player2_id, player1_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (results.length > 0) {
+      const game = results[0];
+
+      // Step 2: Retrieve attempts for the existing game
+      const attemptsQuery = `
+        SELECT * FROM attempts 
+        WHERE game_id = ? 
+        ORDER BY attempt_time ASC
+      `;
+
+      db.query(attemptsQuery, [game.game_id], (err, attemptsResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        return res.json({
+          game: game,
+          attempts: attemptsResults.length > 0 ? attemptsResults : null // Return attempts or null if empty
+        });
+      });
+    } else {
+      // Step 3: Select a random word and create a new multiplayer game
+      const wordQuery = `SELECT word FROM words ORDER BY RAND() LIMIT 1`;
+
+      db.query(wordQuery, (err, wordResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        const randomWord = wordResults[0].word;
+
+        const insertQuery = `
+          INSERT INTO multiplayer_games (player1_id, player2_id, word, current_turn_num, player_turn, 
+                                         player1_score, player2_score, status, last_turn_time)
+          VALUES (?, ?, ?, 0, ?, 0, 0, 'in_progress', NULL)
+        `;
+
+        db.query(insertQuery, [player1_id, player2_id, randomWord, player1_id], (err, insertResult) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          // Step 4: Retrieve the newly created game record
+          const newGameId = insertResult.insertId;
+          const newSelectQuery = `
+            SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id, 
+                   u1.username AS player1_username, u2.username AS player2_username, player_turn, 
+                   current_turn_num, word, player1_score, player2_score, status, completed_at, 
+                   mpg.last_turn_time 
+            FROM multiplayer_games mpg 
+            LEFT JOIN users u1 ON mpg.player1_id = u1.id 
+            LEFT JOIN users u2 ON mpg.player2_id = u2.id 
+            WHERE mpg.id = ?
+          `;
+
+          db.query(newSelectQuery, [newGameId], (err, newResults) => {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+
+            return res.json({
+              game: newResults[0],
+              attempts: null // Set to null for the newly created game as no attempts exist yet
+            });
+          });
+        });
+      });
+    }
+  });
+};
+
+
+// load single player game 
+const retrieveSinglePlayerGame = (req, res) => {
+  const { player_id } = req.query;
+
+  // Step 1: Try to retrieve an existing single-player game
+  const selectQuery = `
+    SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id, 
+           u.username AS player_username, current_turn_num, word, status, 
+           completed_at, spg.last_turn_time 
+    FROM single_player_games spg 
+    LEFT JOIN users u ON spg.player_id = u.id 
+    WHERE spg.player_id = ?
+    ORDER BY last_turn_time DESC
+    LIMIT 1
+  `;
+
+  db.query(selectQuery, [player_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (results.length > 0) {
+      const game = results[0];
+
+      // Step 2: Retrieve attempts for the existing game
+      const attemptsQuery = `
+        SELECT * FROM attempts 
+        WHERE game_id = ? 
+        ORDER BY attempt_time ASC
+      `;
+
+      db.query(attemptsQuery, [game.game_id], (err, attemptsResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        return res.json({
+          game: game,
+          attempts: attemptsResults.length > 0 ? attemptsResults : null // Return attempts or null if empty
+        });
+      });
+    } else {
+      // Step 3: Select a random word and create a new game record
+      const wordQuery = `SELECT word FROM words ORDER BY RAND() LIMIT 1`;
+
+      db.query(wordQuery, (err, wordResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        const randomWord = wordResults[0].word;
+
+        const insertQuery = `
+          INSERT INTO single_player_games (player_id, word, current_turn_num, status, last_turn_time)
+          VALUES (?, ?, 0, 'in_progress', NULL)
+        `;
+
+        db.query(insertQuery, [player_id, randomWord], (err, insertResult) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          // Step 4: Retrieve the newly created game record
+          const newGameId = insertResult.insertId;
+          const newSelectQuery = `
+            SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id, 
+                   u.username AS player_username, current_turn_num, word, status, 
+                   completed_at, spg.last_turn_time 
+            FROM single_player_games spg 
+            LEFT JOIN users u ON spg.player_id = u.id 
+            WHERE spg.id = ?
+          `;
+
+          db.query(newSelectQuery, [newGameId], (err, newResults) => {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+
+            return res.json({
+              game: newResults[0],
+              attempts: null // Set to null for the newly created game as no attempts exist yet
+            });
+          });
+        });
+      });
+    }
+  });
+};
+
+
 
 //Start a multiplayer game
 const start = (req, res) => {
@@ -97,4 +260,4 @@ const submit = (req, res) => {
 
 
 
-module.exports = {getSolution, checkWord, retreiveMultiPlayerGame, getUsers, start, submit}
+module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, getUsers, start, submit}

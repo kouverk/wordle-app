@@ -68,6 +68,17 @@ retrieveMultiPlayerGame(player1_id:number, player2_id: number){
 }
 
   retrieveSinglePlayerGame(user_id:number){
-
+    const params = new HttpParams()
+    .set('player_id', user_id.toString())
+    this.http.get<any>(`${this.apiUrl}/retrieve-singleplayer-game`, { params }).subscribe({
+      next:(response) => {
+        this.gameSubject.next(response.game)
+        this.attemptsSubject.next(response.attempts)
+        this.router.navigate(['/game']);
+      },
+      error:(error) => {
+        console.error('Failed to retrieve the multiplayer game.')
+      } 
+    })
   }
 }

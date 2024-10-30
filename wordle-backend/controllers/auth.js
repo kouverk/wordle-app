@@ -38,25 +38,39 @@ const getAvatars = (req, res) => {
   
 // Assign an avatar upon selection. Note: this as the same return object as login, because they both complete the login process, and fire uponLogin
 const assignAvatar = (req, res) => {
-  const { user_id, avatar_num } = req.body
-  const query = `UPDATE users SET avatar_num = ? WHERE id = ?;
-                 SELECT users.id, users.username, users.password, users.avatar_num, avatars.url as avatar_url 
-                 FROM users
-                 LEFT JOIN avatars ON users.avatar_num = avatars.id
-                 WHERE users.id = ?`
-
-  db.query(query, [avatar_num, user_id, user_id], 
-      (err, results) => {
-          if (err){ return res.status(500).json({ error: err.message }); }
-          const user = results[0]
+    const { user_id, avatar_num } = req.body;
+    const updateQuery = `UPDATE users SET avatar_num = ? WHERE id = ?`;
+    db.query(updateQuery, [avatar_num, user_id], (err, updateResults) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+  
+      const getUserQuery = `
+        SELECT users.id, users.username, users.avatar_num, avatars.url AS avatar_url 
+        FROM users
+        LEFT JOIN avatars ON users.avatar_num = avatars.id
+        WHERE users.id = ?`;
+  
+      db.query(getUserQuery, [user_id], (err, selectResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+  
+        if (selectResults.length > 0) {
+          const user = selectResults[0];
           res.json({
             user_id: user.id,
             username: user.username,
             avatar_num: user.avatar_num,
             avatar_url: user.avatar_url
-        });
+          });
+        } else {
+          res.status(404).json({ error: 'User not found' });
+        }
       });
-}
+    });
+  };
+  
 
 //Login, returns a most recent game state upon login 
 const login = async (req, res) => {
