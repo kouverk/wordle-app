@@ -34,18 +34,14 @@ export class AppComponent {
   ngOnInit() {
     // Fetch users if the user is logged in
     this.authService.isLoggedIn$.subscribe(isLoggedIn => {
-      console.log('are you not logged in dude? ', isLoggedIn)
       this.isLoggedIn = isLoggedIn
       if (isLoggedIn) {
         const user_id = localStorage.getItem('user_id');
-        console.log('here is user_id', user_id)
         if (user_id) {
-          console.log('did you not get the id', user_id)
           this.loggedin_id = parseInt(user_id, 10);
           this.loadUsers();
         }
       } else {
-        console.log('maybe youre htting this null login')
         this.loggedin_id = null;
         this.users = [];
       }

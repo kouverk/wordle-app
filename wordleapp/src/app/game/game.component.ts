@@ -231,7 +231,7 @@ export class GameComponent implements OnInit {
         this.triggerWaveAnimation(currentRowElement); // Trigger wave animation
         setTimeout(() => {
           this.showMessage('Great Job Pwincess 🤩', 2000);
-        }, 350); // This should be equal to the wave duration from the css
+        }, this.waveDuration); // This should be equal to the wave duration from the css
       }
     }, attemptedWord.length * this.nextRowDelay); // After all letters have flipped
   }
@@ -333,7 +333,7 @@ export class GameComponent implements OnInit {
   // Add your wave animation
   triggerWaveAnimation(element: HTMLElement): void {
     if (element) {
-      const animationClass = 'wave-animation';
+      const animationClass = 'wave';
       this.renderer.addClass(element, animationClass);
       setTimeout(() => {
         this.renderer.removeClass(element, animationClass);

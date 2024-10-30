@@ -1,11 +1,17 @@
 <div class="words-container"> 
-    <div class="row">
-        <h2 class="words-title">✨ Choose a word for your bitch-ass opponent ✨</h2>
+    <div class="words-title">
+        <div class="star">✨</div>
+        <div class="words-title-text">Choose a word for your<br> bitch-ass opponent</div>
+        <div class="star">✨</div>
     </div>
     <div class="row">
         <mat-nav-list>
-            <div class="word" *ngFor="let word of ['CHUCKS', 'BUCKS', 'FUCKS']">
-                {{word}}
+            <div 
+                class="word"
+                *ngFor="let word of words"
+                (click)="selectWord(word)"
+                [class.selected]="selectedWord === word">
+                {{ word.word }}
             </div>
             <mat-divider></mat-divider>
         </mat-nav-list>

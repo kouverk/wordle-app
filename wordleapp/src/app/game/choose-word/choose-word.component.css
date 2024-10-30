@@ -3,22 +3,47 @@
     flex-direction: column; 
     align-items: center; 
     margin: 0 auto; 
+    max-width: 80%;
 }
 
 .words-title {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 10px; 
-    color: #4A4A4A; 
-}
-    
-.word {
-    padding: 16px;
-    margin-left: 8px;
-    cursor: pointer;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #e0e0e0;
-    font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+    justify-content: center;
+    gap: 10px; /* Space between stars and text */
+    font-size: 1.5em;
+    color: #4A4A4A;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+}
 
-  }
+.star {
+    display: inline-block; /* Ensures stars are inline */
+}
+
+/*  */
+    
+.word {
+    padding: 12px 24px;
+    cursor: pointer;
+    display: inline-block;
+    margin: 8px 0;
+    border-radius: 8px;
+    background-color: #f0f0f0;
+    font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.word:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.word.selected {
+    background-color: #9f9aae;
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

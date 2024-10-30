@@ -41,7 +41,6 @@ export class AuthService {
           observer.next(response); // Pass response to the component
           observer.complete();
           if (isPlatformBrowser(this.platformId) && response.token) {
-            console.log('did you not hit this for some reason', response)
             this.isLoggedInSubject.next(true); // Update login state
           }
         },

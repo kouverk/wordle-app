@@ -83,9 +83,7 @@
 
 .cell.wave {
     /* Play with this with waveDelay to alter wave animation */
-    animation: wave 400ms ease forwards; /* Wave animation duration */
-    animation-duration: 0.2s;
-    animation-timing-function: ease-in-out;
+    animation: wave 4000ms ease-in-out forwards; /* Wave animation duration */
 }
 
 /* Keyboard styling */

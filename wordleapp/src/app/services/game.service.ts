@@ -113,4 +113,8 @@ export class GameService {
       }
     });
   }
+
+  getWordChoices(){
+    return this.http.get<any>(`${this.apiUrl}/choose-word`)
+  }
 }
