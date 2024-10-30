@@ -28,6 +28,7 @@ export class GameComponent implements OnInit {
   newColorDelay = this.newFlipDelay/2; 
   nextRowDelay = this.newFlipDelay + this.newColorDelay; 
   waveDuration = 400; 
+  wiggleDuration = 600; 
   messageIsVisible: boolean = false; 
   message: string = ''; 
 
@@ -74,40 +75,68 @@ export class GameComponent implements OnInit {
 
   // Update board based on attempts data
   updateBoardWithAttempts(): void {
-    if (this.attempts) {
+    if (this.attempts && this.attempts.length) {
       this.attempts.forEach((attempt, attemptIndex) => {
         const attemptRow = attempt.attempt_num - 1; // Assuming attempt_num is 1-based
         const attemptLetters = attempt.attempt.split('');
         const solutionLetters = this.solution.split('');
-
-        // Update each cell in the row based on the attempt letters
+  
+        // Track counts of letters in the solution and matches in correct positions
+        const solutionLetterCounts: { [key: string]: number } = {};
+        const correctMatches: boolean[] = Array(attemptLetters.length).fill(false);
+  
+        // Initialize letter counts for the solution
+        solutionLetters.forEach(letter => {
+          solutionLetterCounts[letter] = (solutionLetterCounts[letter] || 0) + 1;
+        });
+  
+        // First pass: assign "correct" class to letters in the correct position
         attemptLetters.forEach((letter, letterIndex) => {
           const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${attemptRow + 1}) .cell:nth-child(${letterIndex + 1})`);
           const isCorrectPosition = letter === solutionLetters[letterIndex];
-          const isInSolution = solutionLetters.includes(letter) && !isCorrectPosition;
-
-          // Place the letter and apply CSS classes directly
-          if (cellElement) {
-            cellElement.textContent = letter;
-            if (isCorrectPosition) {
+  
+          if (isCorrectPosition) {
+            if (cellElement) {
+              cellElement.textContent = letter;
               this.renderer.addClass(cellElement, 'correct'); // Green for correct position
-            } else if (isInSolution) {
+            }
+            correctMatches[letterIndex] = true; // Mark this letter as correctly matched
+            solutionLetterCounts[letter]--; // Reduce the count of this letter in solution
+            this.updateKeyboard(letter, 'correct');
+          }
+        });
+  
+        // Second pass: assign "present" class to letters in the wrong position if they exist in solution
+        attemptLetters.forEach((letter, letterIndex) => {
+          const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${attemptRow + 1}) .cell:nth-child(${letterIndex + 1})`);
+          const isCorrectPosition = correctMatches[letterIndex];
+          
+          if (!isCorrectPosition && solutionLetterCounts[letter] > 0) { // Check if there are remaining occurrences
+            if (cellElement) {
+              cellElement.textContent = letter;
               this.renderer.addClass(cellElement, 'present'); // Yellow for present but wrong position
-            } else {
+            }
+            solutionLetterCounts[letter]--; // Reduce the count of this letter in solution
+            this.updateKeyboard(letter, 'present');
+          } else if (!isCorrectPosition) {
+            // If the letter is not in the solution
+            if (cellElement) {
+              cellElement.textContent = letter;
               this.renderer.addClass(cellElement, 'absent'); // Grey for absent letter
             }
+            this.updateKeyboard(letter, 'absent');
           }
-
-          // Update the virtual keyboard state directly without animations
-          this.updateKeyboard(letter, isCorrectPosition ? 'correct' : isInSolution ? 'present' : 'absent');
         });
+  
+        // Set the currentRow and currentCol to the next row after the last attempt
+        if(this.attempts){
+          this.currentRow = this.attempts.length;
+          this.currentCol = 0;
+        }
       });
-
-      // Set the currentRow and currentCol to the next row after the last attempt
-      this.currentRow = this.attempts.length;
-      this.currentCol = 0;
     }
   }
+  
 
 
   // Handle key press events
@@ -138,7 +167,6 @@ export class GameComponent implements OnInit {
   }
 
   handleEnter(): void {
-    console.log('this board', this.board)
     // Check if the current word is complete and can be submitted
     if (this.currentCol === 5) {      
       // Check if the word exists in the database
@@ -211,37 +239,66 @@ export class GameComponent implements OnInit {
   flipLetter(index: number, letter: string): void {
     const currentAttempt = this.board[this.currentRow]; // The current word attempt
     const correctWord = this.solution.split('');        // The solution word split into letters
-
-    // Loop through each letter in the current word attempt
-    currentAttempt.forEach((letter: string, index: number) => {
+  
+    // Track counts of letters in the solution and matched letters
+    const solutionLetterCounts: { [key: string]: number } = {};
+    const correctMatches: boolean[] = Array(currentAttempt.length).fill(false);
+  
+    // Initialize letter counts for the solution
+    correctWord.forEach(letter => {
+      solutionLetterCounts[letter] = (solutionLetterCounts[letter] || 0) + 1;
+    });
+  
+    // First pass: assign "correct" class to letters in the correct position
+    currentAttempt.forEach((letter, index) => {
       const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow + 1}) .cell:nth-child(${index + 1})`);
-      const isCorrectPosition = letter === correctWord[index]; // Letter is in the correct position
-      const isInSolution = correctWord.includes(letter) && !isCorrectPosition; // Letter is in the word but in the wrong position
-
-      // Set a delay to apply the flip animation sequentially, one by one
-      setTimeout(() => {
-        // Apply the flip animation
-        this.renderer.addClass(cellElement, 'flip');
-
-        // Once the cell flips, assign the correct color based on letter status
+      const isCorrectPosition = letter === correctWord[index];
+  
+      if (isCorrectPosition) {
         setTimeout(() => {
-          if (isCorrectPosition) {
+          this.renderer.addClass(cellElement, 'flip');
+          setTimeout(() => {
             this.renderer.addClass(cellElement, 'correct'); // Green for correct position
-          } else if (isInSolution) {
-            this.renderer.addClass(cellElement, 'present'); // Yellow for correct letter but wrong position
-          } else {
+            cellElement.textContent = letter;
+            this.updateKeyboard(letter, 'correct');
+          }, this.newColorDelay);
+        }, index * this.newFlipDelay);
+  
+        correctMatches[index] = true; // Mark this letter as correctly matched
+        solutionLetterCounts[letter]--; // Reduce the count of this letter in solution
+      }
+    });
+  
+    // Second pass: assign "present" class to letters in the wrong position if they exist in solution
+    currentAttempt.forEach((letter, index) => {
+      const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow + 1}) .cell:nth-child(${index + 1})`);
+      const isCorrectPosition = correctMatches[index];
+  
+      if (!isCorrectPosition && solutionLetterCounts[letter] > 0) {
+        setTimeout(() => {
+          this.renderer.addClass(cellElement, 'flip');
+          setTimeout(() => {
+            this.renderer.addClass(cellElement, 'present'); // Yellow for present but wrong position
+            cellElement.textContent = letter;
+            this.updateKeyboard(letter, 'present');
+          }, this.newColorDelay);
+        }, index * this.newFlipDelay);
+  
+        solutionLetterCounts[letter]--; // Reduce the count of this letter in solution
+      } else if (!isCorrectPosition) {
+        // If the letter is not in the solution
+        setTimeout(() => {
+          this.renderer.addClass(cellElement, 'flip');
+          setTimeout(() => {
             this.renderer.addClass(cellElement, 'absent'); // Grey for absent letter
-          }
-
-          // Display the letter in the cell after the flip
-          cellElement.textContent = letter;
-
-          // Now update the virtual keyboard to reflect the same state
-          this.updateKeyboard(letter, isCorrectPosition ? 'correct' : isInSolution ? 'present' : 'absent');
-        }, this.newColorDelay); // Delay to finish the flip before changing the color
-      }, index * this.newFlipDelay); // Delay each flip to occur one after another
+            cellElement.textContent = letter;
+            this.updateKeyboard(letter, 'absent');
+          }, this.newColorDelay);
+        }, index * this.newFlipDelay);
+      }
     });
   }
+  
 
   updateKeyboard(letter: string, status: string): void {
     const keyElement = this.el.nativeElement.querySelector(`.key[data-key="${letter.toLowerCase()}"]`);
@@ -280,11 +337,11 @@ export class GameComponent implements OnInit {
   wiggleRow(rowIndex: number): void {
     const rowElement = this.el.nativeElement.querySelector(`.row:nth-child(${rowIndex + 1})`);
     if (rowElement) {
-      const animationClass = 'wiggle-animation';
+      const animationClass = 'wiggle';
       this.renderer.addClass(rowElement, animationClass);
       setTimeout(() => {
         this.renderer.removeClass(rowElement, animationClass);
-      }, this.waveDuration);
+      }, this.wiggleDuration);
     }
   }
 }
