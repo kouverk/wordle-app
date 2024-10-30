@@ -303,16 +303,23 @@ export class GameComponent implements OnInit {
   updateKeyboard(letter: string, status: string): void {
     const keyElement = this.el.nativeElement.querySelector(`.key[data-key="${letter.toLowerCase()}"]`);
     if (keyElement) {
-      // Only update the key if it's not already marked as correct or present
-      if (!keyElement.classList.contains('correct') && status === 'correct') {
+      // Prioritize the status: "correct" > "present" > "absent"
+      if (status === 'correct') {
+        // Upgrade to 'correct' regardless of current status
+        this.renderer.removeClass(keyElement, 'present');
+        this.renderer.removeClass(keyElement, 'absent');
         this.renderer.addClass(keyElement, 'correct');
-      } else if (!keyElement.classList.contains('correct') && status === 'present' && !keyElement.classList.contains('absent')) {
+      } else if (status === 'present' && !keyElement.classList.contains('correct')) {
+        // Only upgrade to 'present' if it hasn't been marked 'correct'
+        this.renderer.removeClass(keyElement, 'absent');
         this.renderer.addClass(keyElement, 'present');
-      } else if (!keyElement.classList.contains('correct') && !keyElement.classList.contains('present') && !keyElement.classList.contains('absent')) {
+      } else if (status === 'absent' && !keyElement.classList.contains('present') && !keyElement.classList.contains('correct')) {
+        // Only set to 'absent' if it hasn't been marked as 'present' or 'correct'
         this.renderer.addClass(keyElement, 'absent');
       }
     }
-  }
+}
+
 
   showMessage(message: string, duration: number): void {
     this.message = message;
