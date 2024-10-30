@@ -79,5 +79,21 @@ mat-toolbar {
     background-color: lightgrey; 
   }
 
+  .user-avatar {
+    width: 40px; /* Set the avatar size */
+    height: 40px;
+    border-radius: 50%; /* Make it circular */
+    margin-right: 10px; /* Space between avatar and username */
+  }
+
+  .username {
+    font-weight: bold;
+  }
+
+  .user-item {
+    display: flex;
+    align-items: center;
+  }
+
 
   

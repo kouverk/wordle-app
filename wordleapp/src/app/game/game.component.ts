@@ -318,7 +318,7 @@ export class GameComponent implements OnInit {
         this.renderer.addClass(keyElement, 'absent');
       }
     }
-}
+  }
 
 
   showMessage(message: string, duration: number): void {

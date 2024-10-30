@@ -40,8 +40,8 @@ const checkWord = (req, res) => {
 
 
 const getUsers = (req, res) => {
-  const query = 'SELECT username, avatar_num FROM users';
-
+  const query = `SELECT u.username, u.avatar_num, a.url as avatar_url FROM users u
+                 LEFT JOIN avatars as a on a.id = u.avatar_num`;
   db.query(query, (error, results) => {
     if (error) {
       console.error('Get user query failed:', error);  // Log the error
