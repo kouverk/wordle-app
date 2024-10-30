@@ -1,7 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Game, User, Attempts} from './interfaces'
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class GameService {
   private attemptsSubject = new BehaviorSubject<Attempts | null>(null); 
   attempts$ = this.attemptsSubject.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router) { }
 
   getSolution(): Observable<{ word: string }> {
     return this.http.get<{ word: string }>(`${this.apiUrl}/get-solution`);
@@ -26,7 +27,6 @@ export class GameService {
   }
 
   uponLogin(userData: User, mostRecentGame: Game | null, attempts: Attempts | null) {
-    console.log(userData)
     // Store basic user information in localStorage
     if (userData) {
         localStorage.setItem('user_id', userData.user_id.toString());
@@ -51,10 +51,21 @@ export class GameService {
     this.attemptsSubject.next(attempts); 
 }
 
-
-  retrieveMultiPlayerGame(player1_id:number, player2_id: number){
-
-  }
+retrieveMultiPlayerGame(player1_id:number, player2_id: number){
+  const params = new HttpParams()
+  .set('player1_id', player1_id.toString())
+  .set('player2_id', player2_id.toString());
+  this.http.get<any>(`${this.apiUrl}/retrieve-multiplayer-game`, { params }).subscribe({
+    next:(response) => {
+      this.gameSubject.next(response.game)
+      this.attemptsSubject.next(response.attempts)
+      this.router.navigate(['/game']);
+    },
+    error:(error) => {
+      console.error('Failed to retrieve the multiplayer game.')
+    } 
+  })
+}
 
   retrieveSinglePlayerGame(user_id:number){
 

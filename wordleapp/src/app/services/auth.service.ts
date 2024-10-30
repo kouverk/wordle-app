@@ -7,6 +7,7 @@ import { isPlatformBrowser } from '@angular/common';
 @Injectable({
   providedIn: 'root'
 })
+
 export class AuthService {
   private apiUrl = 'http://localhost:3000'; // Your backend URL
   public loggedIn: boolean = false; 
