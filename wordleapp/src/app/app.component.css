@@ -95,5 +95,10 @@ mat-toolbar {
     align-items: center;
   }
 
+  .disabled {
+    opacity: 0.5; /* Makes it look disabled */
+    pointer-events: none; /* Prevents click events */
+  }
+  
 
   

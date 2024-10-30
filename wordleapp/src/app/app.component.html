@@ -1,9 +1,9 @@
 <mat-sidenav-container class="sidenav-container">
   <!-- Sidenav -->
-  <mat-sidenav #sidenav mode="over" [(opened)]="opened" (closedStart)="closeExpansionPanel()" class="sidenav">
+  <mat-sidenav #sidenav mode="over" [(opened)]="opened" (closedStart)="closeExpansionPanel()" class="sidenav" (click)="closeSidenav()">
     <mat-nav-list>
       <!-- Multi-Player Expansion Panel with reference variable -->
-      <mat-expansion-panel #expansionPanel>
+      <mat-expansion-panel [disabled]="isExpansionPanelDisabled()">
         <mat-expansion-panel-header>
           <mat-panel-title class="sidenav-title">
             <span class="material-symbols-outlined" style="margin-right:10px">robot</span>
@@ -13,14 +13,14 @@
         <!-- User List -->
         <div *ngFor="let user of users" (click)="startGameWithUser(user)" class="user-item">
           <mat-list-item>
-            <img [src]="user.avatar_url" alt="avatar" class="user-avatar" />
-            <span class="username">{{ user.username }}</span>
+            <img [src]="user?.avatar_url" alt="avatar" class="user-avatar" />
+            <span class="username">{{ user?.username }}</span>
           </mat-list-item>
         </div>
       </mat-expansion-panel>
       <mat-divider></mat-divider>
       <!-- Single Player Div (Styled like Accordion) -->
-      <div class="sidenav-title single-player" (click)="startSinglePlayer()">
+      <div class="sidenav-title single-player" [ngClass]="{'disabled': !loggedin_id}" (click)="loggedin_id ? startSinglePlayer() : null">
         <span class="material-symbols-outlined" style="margin-right:10px">robot_2</span>
         single player
       </div>

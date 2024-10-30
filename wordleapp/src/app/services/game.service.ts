@@ -19,6 +19,7 @@ export class GameService {
   constructor(private http: HttpClient, private router: Router) { }
 
   getSolution(): Observable<{ word: string }> {
+    console.log('get solution')
     return this.http.get<{ word: string }>(`${this.apiUrl}/get-solution`);
   }
 
@@ -26,59 +27,90 @@ export class GameService {
     return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-word/${word}`)
   }
 
+  // On login, store game and attempts data to localStorage and BehaviorSubjects
   uponLogin(userData: User, mostRecentGame: Game | null, attempts: Attempts | null) {
-    // Store basic user information in localStorage
     if (userData) {
-        localStorage.setItem('user_id', userData.user_id.toString());
-        localStorage.setItem('username', userData.username);
-        localStorage.setItem('avatar_num', userData.avatar_num.toString());
-        localStorage.setItem('avatar_url', userData.avatar_url);
-        this.loggedIn = true;
+      localStorage.setItem('user_id', userData.user_id.toString());
+      localStorage.setItem('username', userData.username);
+      localStorage.setItem('avatar_num', userData.avatar_num.toString());
+      localStorage.setItem('avatar_url', userData.avatar_url);
+      this.loggedIn = true;
     }
 
-    // If no most recent game, initialize a new single-player game
     if (!mostRecentGame) {
-        this.gameSubject.next(null);
-        this.attemptsSubject.next(null);
-        return;
+      this.clearGameData();
+      return;
     }
 
-    // Determine if the game is multiplayer based on game_type
     this.multiplayer_game = mostRecentGame.game_type === 'multiplayer';
+    this.updateGameState(mostRecentGame, attempts);
+  }
 
-    // Load the most recent game into the game subject, with type narrowing handled by TypeScript
-    this.gameSubject.next(mostRecentGame);
-    this.attemptsSubject.next(attempts); 
-}
+  // Save game and attempts data to localStorage and update BehaviorSubjects
+  private updateGameState(game: Game | null, attempts: Attempts | null) {
+    this.gameSubject.next(game);
+    this.attemptsSubject.next(attempts);
 
-retrieveMultiPlayerGame(player1_id:number, player2_id: number){
-  const params = new HttpParams()
-  .set('player1_id', player1_id.toString())
-  .set('player2_id', player2_id.toString());
-  this.http.get<any>(`${this.apiUrl}/retrieve-multiplayer-game`, { params }).subscribe({
-    next:(response) => {
-      this.gameSubject.next(response.game)
-      this.attemptsSubject.next(response.attempts)
-      this.router.navigate(['/game']);
-    },
-    error:(error) => {
-      console.error('Failed to retrieve the multiplayer game.')
-    } 
-  })
-}
+    if (game) {
+      localStorage.setItem('game', JSON.stringify(game));
+    } else {
+      localStorage.removeItem('game');
+    }
 
-  retrieveSinglePlayerGame(user_id:number){
+    if (attempts) {
+      localStorage.setItem('attempts', JSON.stringify(attempts));
+    } else {
+      localStorage.removeItem('attempts');
+    }
+  }
+
+  // Retrieve game data from localStorage on refresh
+  private getStoredGame(): Game | null {
+    const storedGame = localStorage.getItem('game');
+    return storedGame ? JSON.parse(storedGame) : null;
+  }
+
+  // Retrieve attempts data from localStorage on refresh
+  private getStoredAttempts(): Attempts | null {
+    const storedAttempts = localStorage.getItem('attempts');
+    return storedAttempts ? JSON.parse(storedAttempts) : null;
+  }
+
+  // Clear game and attempts data from localStorage and BehaviorSubjects
+  clearGameData() {
+    localStorage.removeItem('game');
+    localStorage.removeItem('attempts');
+    this.gameSubject.next(null);
+    this.attemptsSubject.next(null);
+  }
+
+  // Retrieve multiplayer game data and update state
+  retrieveMultiPlayerGame(player1_id: number, player2_id: number) {
     const params = new HttpParams()
-    .set('player_id', user_id.toString())
-    this.http.get<any>(`${this.apiUrl}/retrieve-singleplayer-game`, { params }).subscribe({
-      next:(response) => {
-        this.gameSubject.next(response.game)
-        this.attemptsSubject.next(response.attempts)
+      .set('player1_id', player1_id.toString())
+      .set('player2_id', player2_id.toString());
+    this.http.get<any>(`${this.apiUrl}/retrieve-multiplayer-game`, { params }).subscribe({
+      next: (response) => {
+        this.updateGameState(response.game, response.attempts);
         this.router.navigate(['/game']);
       },
-      error:(error) => {
-        console.error('Failed to retrieve the multiplayer game.')
-      } 
-    })
+      error: () => {
+        console.error('Failed to retrieve the multiplayer game.');
+      }
+    });
+  }
+
+  // Retrieve single-player game data and update state
+  retrieveSinglePlayerGame(user_id: number) {
+    const params = new HttpParams().set('player_id', user_id.toString());
+    this.http.get<any>(`${this.apiUrl}/retrieve-singleplayer-game`, { params }).subscribe({
+      next: (response) => {
+        this.updateGameState(response.game, response.attempts);
+        this.router.navigate(['/game']);
+      },
+      error: () => {
+        console.error('Failed to retrieve the single-player game.');
+      }
+    });
   }
 }
