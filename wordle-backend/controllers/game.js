@@ -235,7 +235,19 @@ const retrieveSinglePlayerGame = (req, res) => {
   });
 };
 
-
+const chooseWord = (req, res) => {
+  db.query('SELECT word FROM words ORDER BY RAND() LIMIT 12', (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length > 0) {
+      res.json(results);
+    } else {
+      res.status(404).json({ error: 'Error in databse. No words found' });
+    }
+    
+  })
+}
 
 //Start a multiplayer game
 const start = (req, res) => {
@@ -260,4 +272,4 @@ const submit = (req, res) => {
 
 
 
-module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, getUsers, start, submit}
+module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, start, submit}
