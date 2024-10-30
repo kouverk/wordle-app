@@ -6,6 +6,7 @@ import { AuthService } from './services/auth.service';
 import { SharedModule } from './modules/shared.module';
 import { MatSidenav } from '@angular/material/sidenav';
 import { GameService } from './services/game.service';
+import { MatExpansionPanel } from '@angular/material/expansion';
 
 @Component({
   selector: 'app-root',
@@ -17,43 +18,50 @@ import { GameService } from './services/game.service';
 export class AppComponent {
   title = 'wordleapp';
   opened: boolean = false; 
-  users: any[] = [];  // This will store the list of users
-  @ViewChild('sidenav') sidenav!: MatSidenav; // Reference to the sidenav
+  users: any[] = []; // List of users
+  @ViewChild('sidenav') sidenav!: MatSidenav;
+  @ViewChild('expansionPanel') expansionPanel!: MatExpansionPanel;
 
-  constructor(private authService: AuthService, private gameservice: GameService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private gameService: GameService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
-    // // Fetch users from the server
-    if(this.authService.userIsLoggedIn()){
+    // Fetch users if the user is logged in
+    if (this.authService.userIsLoggedIn()) {
       this.authService.getUsers().subscribe({
         next: (data: any) => {
-          this.users = data 
-          console.log(this.users)
+          this.users = data;
+          console.log(this.users);
         },
         error: (err) => {
           console.error('Failed to fetch users', err);
         }
       });
     }
-
   }
 
   startGameWithUser(user: any) {
     console.log('Starting a game with user:', user.username);
-
-    // Logic to create a multiplayer game with the selected user
-    // Assuming you have a route for starting a game with a user ID
-    
+    // Additional game-start logic
   }
 
-  startSinglePlayer(){
+  startSinglePlayer() {
     this.sidenav.close();
   }
 
-  logout(){
+  logout() {
     this.sidenav.close();
     localStorage.clear();
-    // Redirect to the login page
     this.router.navigate(['/login']);
+  }
+
+  // Method to close the expansion panel when sidenav closes
+  closeExpansionPanel() {
+    if (this.expansionPanel) {
+      this.expansionPanel.close();
+    }
   }
 }

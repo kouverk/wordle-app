@@ -1,9 +1,9 @@
 <mat-sidenav-container class="sidenav-container">
   <!-- Sidenav -->
-  <mat-sidenav #sidenav mode="over" [(opened)]="opened" class="sidenav">
+  <mat-sidenav #sidenav mode="over" [(opened)]="opened" (closedStart)="closeExpansionPanel()" class="sidenav">
     <mat-nav-list>
-      <!-- Multi-Player Expansion Panel -->
-      <mat-expansion-panel>
+      <!-- Multi-Player Expansion Panel with reference variable -->
+      <mat-expansion-panel #expansionPanel>
         <mat-expansion-panel-header>
           <mat-panel-title class="sidenav-title">
             <span class="material-symbols-outlined" style="margin-right:10px">robot</span>
