@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { MaterialModule } from 'src/app/modules/material.module';
 import { SharedModule } from 'src/app/modules/shared.module';
 import { GameService } from 'src/app/services/game.service';
@@ -15,7 +16,7 @@ export class ChooseWordComponent {
   words: Array<{word: string}> = [];
   selectedWord: { word: string } | null = null; // Add selectedWord property
 
-  constructor(private gameservice: GameService){}
+  constructor(private gameservice: GameService, private router: Router){}
 
   ngOnInit(){
     this.gameservice.getWordChoices().subscribe({
@@ -31,6 +32,7 @@ export class ChooseWordComponent {
   selectWord(word: { word: string }): void {
     this.selectedWord = word;
     console.log('Selected word:', word);
+    this.router.navigate(['/game']);
     // Here, you can add any additional action you want to perform on word selection
   }
 }

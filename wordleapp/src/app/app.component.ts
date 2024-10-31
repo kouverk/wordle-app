@@ -62,6 +62,7 @@ export class AppComponent {
   // Method to start a multiplayer game if logged in
   startGameWithUser(user: User) {
     if (this.loggedin_id && user) {  // Only proceed if logged in
+      console.log(user)
       this.gameService.retrieveMultiPlayerGame(this.loggedin_id, user.user_id);
       this.closeSidenav(); // Close sidenav after starting game
     }

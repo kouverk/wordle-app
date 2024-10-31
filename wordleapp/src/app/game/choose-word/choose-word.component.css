@@ -42,12 +42,12 @@
 }
 
 .word:hover {
-    background-color: #e0e0e0;
+    background-color: #c7bce9;
     transform: translateY(-2px);
 }
 
 .word.selected {
-    background-color: #9f9aae;
+    background-color: #c0aff3;
     color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }

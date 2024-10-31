@@ -50,7 +50,6 @@ export class GameService {
   private updateGameState(game: Game | null, attempts: Attempts | null) {
     this.gameSubject.next(game);
     this.attemptsSubject.next(attempts);
-
     if (game) {
       localStorage.setItem('game', JSON.stringify(game));
     } else {
