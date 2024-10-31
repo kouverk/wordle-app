@@ -27,8 +27,8 @@ export class GameComponent implements OnInit {
   newFlipDelay = 400; 
   newColorDelay = this.newFlipDelay/2; 
   nextRowDelay = this.newFlipDelay + this.newColorDelay; 
-  waveDuration = 400; 
-  wiggleDuration = 600; 
+  waveDuration = 300; 
+  wiggleDuration = 650; 
   messageIsVisible: boolean = false; 
   message: string = ''; 
 
@@ -324,7 +324,9 @@ export class GameComponent implements OnInit {
   showMessage(message: string, duration: number): void {
     this.message = message;
     this.messageIsVisible = true;
+    console.log('we have set timer for show message')
     setTimeout(() => {
+      console.log('we have finished timer for show message')
       this.messageIsVisible = false;
       this.message = '';
     }, duration);
@@ -333,22 +335,22 @@ export class GameComponent implements OnInit {
   // Add your wave animation
   triggerWaveAnimation(element: HTMLElement): void {
     if (element) {
-      const animationClass = 'wave';
-      this.renderer.addClass(element, animationClass);
+      const cells = element.querySelectorAll('.cell');
+      cells.forEach((cell, index) => {
       setTimeout(() => {
-        this.renderer.removeClass(element, animationClass);
-      }, this.waveDuration);
+          this.renderer.addClass(cell, 'wave');
+      }, index * 100); // Stagger the animation for each letter
+      });
     }
   }
 
   wiggleRow(rowIndex: number): void {
-    const rowElement = this.el.nativeElement.querySelector(`.row:nth-child(${rowIndex + 1})`);
+    const rowElement = this.el.nativeElement.querySelectorAll('.row')[rowIndex];
     if (rowElement) {
-      const animationClass = 'wiggle';
-      this.renderer.addClass(rowElement, animationClass);
+      rowElement.classList.add('wiggle');
       setTimeout(() => {
-        this.renderer.removeClass(rowElement, animationClass);
-      }, this.wiggleDuration);
+        rowElement.classList.remove('wiggle');
+      }, this.wiggleDuration); // Duration of the wiggle animation
     }
   }
 }

@@ -48,7 +48,7 @@
 
   .cell.flip {
     /* Play with this with newFlipDelay to alter the flip animation */
-    animation: flip 550ms ease forwards;
+    animation: flip 350ms ease forwards;
     border:none;
 }
 
@@ -83,7 +83,9 @@
 
 .cell.wave {
     /* Play with this with waveDelay to alter wave animation */
-    animation: wave 4000ms ease-in-out forwards; /* Wave animation duration */
+    animation: wave 400ms ease forwards; /* Wave animation duration */
+    animation-duration: 0.2s;
+    animation-timing-function: ease-in-out;
 }
 
 /* Keyboard styling */
@@ -182,7 +184,7 @@
 }
   
 .wiggle {
-    animation: wiggle 0.3s ease; /* Reduced the duration for a faster wiggle */
+    animation: wiggle 300ms ease; /* Reduced the duration for a faster wiggle */
 }
 
 /* Message Styling */

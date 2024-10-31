@@ -6,12 +6,14 @@
     </div>
     <div class="row">
         <mat-nav-list>
-            <div 
+            <div class="word-container">
+                <div 
                 class="word"
                 *ngFor="let word of words"
                 (click)="selectWord(word)"
                 [class.selected]="selectedWord === word">
                 {{ word.word }}
+            </div>
             </div>
             <mat-divider></mat-divider>
         </mat-nav-list>
