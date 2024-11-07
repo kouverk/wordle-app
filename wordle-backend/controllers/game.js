@@ -79,22 +79,21 @@ const retrieveMultiPlayerGame = (req, res) => {
 
       // Step 2: Retrieve attempts for the existing game
       const attemptsQuery = `
-        SELECT * FROM attempts 
+        SELECT * FROM multiplayer_game_attempts 
         WHERE game_id = ? 
-        ORDER BY attempt_time ASC
+        ORDER BY created_at ASC
       `;
 
       db.query(attemptsQuery, [game.game_id], (err, attemptsResults) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
-
         return res.json({
           game: game,
           attempts: attemptsResults.length > 0 ? attemptsResults : null // Return attempts or null if empty
         });
       });
-    } else {
+    } else { 
       // Step 3: Select a random word and create a new multiplayer game
       const wordQuery = `SELECT word FROM words ORDER BY RAND() LIMIT 1`;
 
@@ -133,7 +132,6 @@ const retrieveMultiPlayerGame = (req, res) => {
             if (err) {
               return res.status(500).json({ error: err.message });
             }
-
             return res.json({
               game: newResults[0],
               attempts: null // Set to null for the newly created game as no attempts exist yet
