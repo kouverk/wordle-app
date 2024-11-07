@@ -1,11 +1,14 @@
-
 <div class="wait-container"> 
     <div class="wait-title">
-        <div class="star">✨</div>
-        <div>Waiting for bitch-ass to<br>finish this-word.</div>
-        <div class="star">✨</div>
+      <div class="star">✨</div>
+      <div *ngIf="multiplayerGame">
+        Waiting for bitch-ass {{ opponent_username }}<br>
+        to finish the word {{ multiplayerGame.word }}.
+      </div>
+      <div class="star">✨</div>
     </div>
     <div class="row">
-        <div class="lds-grid"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+      <div class="lds-grid"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
     </div>
-</div>
+  </div>
+  

@@ -8,15 +8,18 @@ interface BaseGame {
     attempts: Attempt[];
 }
 
-interface SinglePlayerGame extends BaseGame {
+export interface SinglePlayerGame extends BaseGame {
     game_type: 'singleplayer';
     player1_id: number;
+    player1_username: string; 
 }
 
-interface MultiplayerGame extends BaseGame {
+export interface MultiplayerGame extends BaseGame {
     game_type: 'multiplayer';
     player1_id: number;
+    player1_username: string; 
     player2_id: number;
+    player2_username: string; 
     player1_score: number | null;
     player2_score: number | null;
     player_turn: number;

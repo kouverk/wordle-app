@@ -1,13 +1,15 @@
-import { HttpClient, HttpParams} from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Inject, Injectable, PLATFORM_ID, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Game, User, Attempts} from './interfaces'
+import { Game, User, Attempts, MultiplayerGame } from './interfaces';
 import { Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
+  
   private apiUrl = 'http://localhost:3000';
   public loggedIn: boolean = false; 
   public multiplayer_game: boolean = false; 
@@ -16,15 +18,19 @@ export class GameService {
   private attemptsSubject = new BehaviorSubject<Attempts | null>(null); 
   attempts$ = this.attemptsSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(private http: HttpClient, private router: Router, @Inject(PLATFORM_ID) private platformId: Object) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.updateGameState(this.getStoredGame(), this.getStoredAttempts());
+    }
+  }
+
 
   getSolution(): Observable<{ word: string }> {
-    console.log('get solution')
     return this.http.get<{ word: string }>(`${this.apiUrl}/get-solution`);
   }
 
-  checkWord(word: string): Observable<{exists: boolean}>{
-    return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-word/${word}`)
+  checkWord(word: string): Observable<{exists: boolean}> {
+    return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-word/${word}`);
   }
 
   // On login, store game and attempts data to localStorage and BehaviorSubjects
@@ -50,35 +56,43 @@ export class GameService {
   private updateGameState(game: Game | null, attempts: Attempts | null) {
     this.gameSubject.next(game);
     this.attemptsSubject.next(attempts);
-    if (game) {
+    if (game && isPlatformBrowser(this.platformId)) {
       localStorage.setItem('game', JSON.stringify(game));
-    } else {
+    } else if (!game && isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('game');
     }
 
-    if (attempts) {
+    if (attempts && isPlatformBrowser(this.platformId)) {
       localStorage.setItem('attempts', JSON.stringify(attempts));
-    } else {
+    } else if (!attempts && isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('attempts');
     }
   }
 
   // Retrieve game data from localStorage on refresh
   private getStoredGame(): Game | null {
-    const storedGame = localStorage.getItem('game');
-    return storedGame ? JSON.parse(storedGame) : null;
+    if (isPlatformBrowser(this.platformId)) {
+      const storedGame = localStorage.getItem('game');
+      return storedGame ? JSON.parse(storedGame) : null;
+    }
+    return null;
   }
 
   // Retrieve attempts data from localStorage on refresh
   private getStoredAttempts(): Attempts | null {
-    const storedAttempts = localStorage.getItem('attempts');
-    return storedAttempts ? JSON.parse(storedAttempts) : null;
+    if (isPlatformBrowser(this.platformId)) {
+      const storedAttempts = localStorage.getItem('attempts');
+      return storedAttempts ? JSON.parse(storedAttempts) : null;
+    }
+    return null;
   }
 
   // Clear game and attempts data from localStorage and BehaviorSubjects
   clearGameData() {
-    localStorage.removeItem('game');
-    localStorage.removeItem('attempts');
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('game');
+      localStorage.removeItem('attempts');
+    }
     this.gameSubject.next(null);
     this.attemptsSubject.next(null);
   }
@@ -86,15 +100,22 @@ export class GameService {
   // Retrieve multiplayer game data and update state
   retrieveMultiPlayerGame(player1_id: number, player2_id: number) {
     const params = new HttpParams()
-      .set('player1_id', player1_id.toString())
+      .set('player1_id', player1_id.toString()) //This is logged in player id
       .set('player2_id', player2_id.toString());
     this.http.get<any>(`${this.apiUrl}/retrieve-multiplayer-game`, { params }).subscribe({
       next: (response) => {
+        const game = response.game;
         this.updateGameState(response.game, response.attempts);
-        this.router.navigate(['/game']);
+        console.log('user', player1_id, game.player_turn);
+        if (player1_id == game.player_turn) {
+          this.router.navigate(['/game']);
+        } else {
+          this.router.navigate(['/wait']);
+        }
       },
-      error: () => {
+      error: (error) => {
         console.error('Failed to retrieve the multiplayer game.');
+        console.log(error);
       }
     });
   }
@@ -113,7 +134,11 @@ export class GameService {
     });
   }
 
-  getWordChoices(){
-    return this.http.get<any>(`${this.apiUrl}/choose-word`)
+  getWordChoices() {
+    return this.http.get<any>(`${this.apiUrl}/choose-word`);
+  }
+
+  getCurrentUser() {
+    return localStorage.getItem('username');
   }
 }

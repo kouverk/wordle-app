@@ -230,7 +230,7 @@ export class GameComponent implements OnInit {
         const currentRowElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow})`);
         this.triggerWaveAnimation(currentRowElement); // Trigger wave animation
         setTimeout(() => {
-          this.showMessage('Great Job Pwincess 🤩', 2000);
+          this.showMessage('Great Job Pwincess 🤩', 4000);
         }, this.waveDuration); // This should be equal to the wave duration from the css
       }
     }, attemptedWord.length * this.nextRowDelay); // After all letters have flipped
