@@ -1,40 +1,50 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Inject, Injectable, PLATFORM_ID, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Game, User, Attempts, MultiplayerGame } from './interfaces';
+import { Game, User, Attempts, MultiplayerGame, Attempt } from './interfaces';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class GameService {
-  
   private apiUrl = 'http://localhost:3000';
-  public loggedIn: boolean = false; 
-  public multiplayer_game: boolean = false; 
+  public loggedIn: boolean = false;
+  public multiplayer_game: boolean = false;
   private gameSubject = new BehaviorSubject<Game | null>(null);
   game$ = this.gameSubject.asObservable();
-  private attemptsSubject = new BehaviorSubject<Attempts | null>(null); 
+  private attemptsSubject = new BehaviorSubject<Attempts | null>(null);
   attempts$ = this.attemptsSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router, @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
     if (isPlatformBrowser(this.platformId)) {
-      this.updateGameState(this.getStoredGame(), this.getStoredAttempts());
+      this.updateGame(this.getStoredGame());
+      this.updateAttempts(this.getStoredAttempts());
+      console.log(this.getStoredAttempts())
     }
   }
-
 
   getSolution(): Observable<{ word: string }> {
     return this.http.get<{ word: string }>(`${this.apiUrl}/get-solution`);
   }
 
-  checkWord(word: string): Observable<{exists: boolean}> {
-    return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-word/${word}`);
+  checkWord(word: string): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(
+      `${this.apiUrl}/check-word/${word}`
+    );
   }
 
   // On login, store game and attempts data to localStorage and BehaviorSubjects
-  uponLogin(userData: User, mostRecentGame: Game | null, attempts: Attempts | null) {
+  uponLogin(
+    userData: User,
+    mostRecentGame: Game | null,
+    attempts: Attempts | null
+  ) {
     if (userData) {
       localStorage.setItem('user_id', userData.user_id.toString());
       localStorage.setItem('username', userData.username);
@@ -49,19 +59,22 @@ export class GameService {
     }
 
     this.multiplayer_game = mostRecentGame.game_type === 'multiplayer';
-    this.updateGameState(mostRecentGame, attempts);
+    this.updateGame(mostRecentGame);
+    this.updateAttempts(attempts)
   }
 
   // Save game and attempts data to localStorage and update BehaviorSubjects
-  private updateGameState(game: Game | null, attempts: Attempts | null) {
+  private updateGame(game: Game | null, ) {
     this.gameSubject.next(game);
-    this.attemptsSubject.next(attempts);
     if (game && isPlatformBrowser(this.platformId)) {
       localStorage.setItem('game', JSON.stringify(game));
     } else if (!game && isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('game');
     }
+  }
 
+  private updateAttempts(attempts: Attempts | null){
+    this.attemptsSubject.next(attempts);
     if (attempts && isPlatformBrowser(this.platformId)) {
       localStorage.setItem('attempts', JSON.stringify(attempts));
     } else if (!attempts && isPlatformBrowser(this.platformId)) {
@@ -102,36 +115,42 @@ export class GameService {
     const params = new HttpParams()
       .set('player1_id', player1_id.toString()) //This is logged in player id
       .set('player2_id', player2_id.toString());
-    this.http.get<any>(`${this.apiUrl}/retrieve-multiplayer-game`, { params }).subscribe({
-      next: (response) => {
-        const game = response.game;
-        this.updateGameState(response.game, response.attempts);
-        console.log('user', player1_id, game.player_turn);
-        if (player1_id == game.player_turn) {
-          this.router.navigate(['/game']);
-        } else {
-          this.router.navigate(['/wait']);
-        }
-      },
-      error: (error) => {
-        console.error('Failed to retrieve the multiplayer game.');
-        console.log(error);
-      }
-    });
+    this.http
+      .get<any>(`${this.apiUrl}/retrieve-multiplayer-game`, { params })
+      .subscribe({
+        next: (response) => {
+          const game = response.game;
+          this.updateGame(response.game);
+          this.updateAttempts(response.attempts)
+          console.log('user', player1_id, game.player_turn);
+          if (player1_id == game.player_turn) {
+            this.router.navigate(['/game']);
+          } else {
+            this.router.navigate(['/wait']);
+          }
+        },
+        error: (error) => {
+          console.error('Failed to retrieve the multiplayer game.');
+          console.log(error);
+        },
+      });
   }
 
   // Retrieve single-player game data and update state
   retrieveSinglePlayerGame(user_id: number) {
     const params = new HttpParams().set('player_id', user_id.toString());
-    this.http.get<any>(`${this.apiUrl}/retrieve-singleplayer-game`, { params }).subscribe({
-      next: (response) => {
-        this.updateGameState(response.game, response.attempts);
-        this.router.navigate(['/game']);
-      },
-      error: () => {
-        console.error('Failed to retrieve the single-player game.');
-      }
-    });
+    this.http
+      .get<any>(`${this.apiUrl}/retrieve-singleplayer-game`, { params })
+      .subscribe({
+        next: (response) => {
+          this.updateGame(response.game);
+          this.updateAttempts(response.attempts)
+          this.router.navigate(['/game']);
+        },
+        error: () => {
+          console.error('Failed to retrieve the single-player game.');
+        },
+      });
   }
 
   getWordChoices() {
@@ -140,5 +159,30 @@ export class GameService {
 
   getCurrentUser() {
     return localStorage.getItem('username');
+  }
+
+  addAttemptsData(word: string, is_correct: boolean, attempt_num: number) {
+    const game = this.getStoredGame();
+    if (game) {
+      const attempt = {
+        game_id: game.game_id,
+        game_type: game?.game_type,
+        player_id:
+          game?.game_type == 'singleplayer'
+            ? game.player1_id
+            : game.player_turn,
+        attempt: word,
+        attempt_num: attempt_num,
+        is_correct: is_correct,
+      };
+      this.http.post<Attempts>(`${this.apiUrl}/add-attempt`, attempt).subscribe({
+        next: (response) => {
+          this.updateAttempts(response)
+        },
+        error: (error) => {
+          console.error('Failed to insert attempt ', error);
+        },
+      });
+    }
   }
 }

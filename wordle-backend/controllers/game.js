@@ -247,6 +247,53 @@ const chooseWord = (req, res) => {
   })
 }
 
+//Add attempts data
+const addAttempt = (req, res) => {
+  const { game_id, game_type, player_id, attempt, attempt_num, is_correct } = req.body;
+
+  // Validate game_type to ensure only valid tables are used
+  const validTables = {
+    singleplayer: 'single_player_game_attempts',
+    multiplayer: 'multiplayer_game_attempts'
+  };
+
+  const tableName = validTables[game_type];
+  if (!tableName) {
+    return res.status(400).json({ error: 'Invalid game type' });
+  }
+
+  // SQL query for inserting a new attempt
+  const attemptInsert = `
+    INSERT INTO ?? (game_id, player_id, attempt, attempt_num, is_correct, created_at) 
+    VALUES (?, ?, ?, ?, ?, NOW())
+  `;
+  const insertParams = [tableName, game_id, player_id, attempt, attempt_num, is_correct];
+
+  // Perform the insert query
+  db.query(attemptInsert, insertParams, (err, attemptResults) => {
+    if (err) {
+      console.error('Database error at attempts insert:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    // SQL query to retrieve all attempts for this game
+    const retrieveAttempts = `SELECT * FROM ?? WHERE game_id = ? ORDER BY attempt_num ASC`;
+    const retrieveParams = [tableName, game_id];
+
+    // Perform the retrieve query after successful insertion
+    db.query(retrieveAttempts, retrieveParams, (err, allAttempts) => {
+      if (err) {
+        console.error('Database error retrieving attempts:', err);
+        return res.status(500).json({ error: err.message });
+      }
+
+      // Send response with all attempts after successful retrieval
+      res.status(200).json(allAttempts);
+    });
+  });
+};
+
+
+
 //Start a multiplayer game
 const start = (req, res) => {
   const { player1_id, player2_id } = req.body;
@@ -268,6 +315,4 @@ const submit = (req, res) => {
       });
 }
 
-
-
-module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, start, submit}
+module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, start, submit}

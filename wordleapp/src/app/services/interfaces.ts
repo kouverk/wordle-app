@@ -1,5 +1,5 @@
 interface BaseGame {
-    id: number;
+    game_id: number;
     game_type: 'singleplayer' | 'multiplayer';
     current_turn_num: number;
     word: string;
@@ -27,7 +27,7 @@ export interface MultiplayerGame extends BaseGame {
 
 export type Game = SinglePlayerGame | MultiplayerGame;
 
-interface Attempt {
+export interface Attempt {
     id: number;
     game_id: number;
     player_id: number;

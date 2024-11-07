@@ -51,6 +51,7 @@ export class GameComponent implements OnInit {
     // Subscribe to attempts updates
     this.gameservice.attempts$.subscribe(attempts => {
       this.attempts = attempts; // Update attempts variable
+      console.log('heres attempts in game', this.attempts)
       this.updateBoardWithAttempts(); // Update board display with attempts
     });
 
@@ -174,6 +175,7 @@ export class GameComponent implements OnInit {
         next: (data) => {
           if (data.exists) {
             // Handle word success (e.g., update the board, mark word as valid)
+            this.gameservice.addAttemptsData(this.currentWord, this.currentWord === this.solution, this.currentRow)
             this.animateWord(this.board[this.currentRow]);
           } else {
             this.wiggleRow(this.currentRow);
