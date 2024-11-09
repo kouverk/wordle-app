@@ -1,4 +1,4 @@
-import { Component, OnInit, Renderer2, ElementRef } from '@angular/core';
+import { Component, OnInit, Renderer2, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { MaterialModule } from '../modules/material.module';
 import { SharedModule } from '../modules/shared.module';
 import { GameService } from '../services/game.service';
@@ -32,19 +32,20 @@ export class GameComponent implements OnInit {
   messageIsVisible: boolean = false; 
   message: string = ''; 
 
-  constructor(private gameservice: GameService, private renderer: Renderer2, private el: ElementRef){}
+  constructor(private gameservice: GameService, private renderer: Renderer2, private el: ElementRef, private cdr: ChangeDetectorRef){}
 
   ngOnInit() {
     // Subscribe to game updates
     this.gameservice.game$.subscribe(game => {
       this.game = game; // Update the component's game variable
+      console.log(this.game)
       if (this.game == null){
         // Start single player game by retrieving a solution word
         this.fetchSolution();
         this.multiplayer = false;
       } else {
         this.multiplayer = true; 
-        this.updateBoardWithAttempts();
+        this.solution = this.game.word; 
       }
     });
 
@@ -52,6 +53,7 @@ export class GameComponent implements OnInit {
     this.gameservice.attempts$.subscribe(attempts => {
       this.attempts = attempts; // Update attempts variable
       console.log('heres attempts in game', this.attempts)
+      this.cdr.detectChanges();  // Manually trigger change detection
       this.updateBoardWithAttempts(); // Update board display with attempts
     });
 
@@ -77,66 +79,42 @@ export class GameComponent implements OnInit {
   // Update board based on attempts data
   updateBoardWithAttempts(): void {
     if (this.attempts && this.attempts.length) {
-      this.attempts.forEach((attempt, attemptIndex) => {
-        const attemptRow = attempt.attempt_num - 1; // Assuming attempt_num is 1-based
-        const attemptLetters = attempt.attempt.split('');
-        const solutionLetters = this.solution.split('');
-  
-        // Track counts of letters in the solution and matches in correct positions
-        const solutionLetterCounts: { [key: string]: number } = {};
-        const correctMatches: boolean[] = Array(attemptLetters.length).fill(false);
-  
-        // Initialize letter counts for the solution
-        solutionLetters.forEach(letter => {
-          solutionLetterCounts[letter] = (solutionLetterCounts[letter] || 0) + 1;
+        // Loop through each attempt and update the board
+        this.attempts.forEach((attempt, attemptIndex) => {
+            const attemptRow = attemptIndex;  // Use index to determine row directly
+            const attemptLetters = attempt.attempt.split('');
+            const solutionLetters = this.solution.split('');
+
+            attemptLetters.forEach((letter, letterIndex) => {
+                const cellElement = this.el.nativeElement.querySelector(
+                    `.row:nth-of-type(${attemptRow + 1}) .cell:nth-of-type(${letterIndex + 1})`
+                );
+
+                // Only update cell if it exists (ensures row and column are valid)
+                if (cellElement) {
+                    cellElement.textContent = letter;
+                    // Assign classes based on letter correctness
+                    const isCorrectPosition = letter === solutionLetters[letterIndex];
+                    if (isCorrectPosition) {
+                        this.renderer.addClass(cellElement, 'correct'); // Green for correct position
+                        this.updateKeyboard(letter, 'correct');
+                    } else if (solutionLetters.includes(letter)) {
+                        this.renderer.addClass(cellElement, 'present'); // Yellow for present but wrong position
+                        this.updateKeyboard(letter, 'present');
+                    } else {
+                        this.renderer.addClass(cellElement, 'absent'); // Grey for absent letter
+                        this.updateKeyboard(letter, 'absent');
+                    }
+                }
+            });
         });
-  
-        // First pass: assign "correct" class to letters in the correct position
-        attemptLetters.forEach((letter, letterIndex) => {
-          const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${attemptRow + 1}) .cell:nth-child(${letterIndex + 1})`);
-          const isCorrectPosition = letter === solutionLetters[letterIndex];
-  
-          if (isCorrectPosition) {
-            if (cellElement) {
-              cellElement.textContent = letter;
-              this.renderer.addClass(cellElement, 'correct'); // Green for correct position
-            }
-            correctMatches[letterIndex] = true; // Mark this letter as correctly matched
-            solutionLetterCounts[letter]--; // Reduce the count of this letter in solution
-            this.updateKeyboard(letter, 'correct');
-          }
-        });
-  
-        // Second pass: assign "present" class to letters in the wrong position if they exist in solution
-        attemptLetters.forEach((letter, letterIndex) => {
-          const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${attemptRow + 1}) .cell:nth-child(${letterIndex + 1})`);
-          const isCorrectPosition = correctMatches[letterIndex];
-          
-          if (!isCorrectPosition && solutionLetterCounts[letter] > 0) { // Check if there are remaining occurrences
-            if (cellElement) {
-              cellElement.textContent = letter;
-              this.renderer.addClass(cellElement, 'present'); // Yellow for present but wrong position
-            }
-            solutionLetterCounts[letter]--; // Reduce the count of this letter in solution
-            this.updateKeyboard(letter, 'present');
-          } else if (!isCorrectPosition) {
-            // If the letter is not in the solution
-            if (cellElement) {
-              cellElement.textContent = letter;
-              this.renderer.addClass(cellElement, 'absent'); // Grey for absent letter
-            }
-            this.updateKeyboard(letter, 'absent');
-          }
-        });
-  
-        // Set the currentRow and currentCol to the next row after the last attempt
-        if(this.attempts){
-          this.currentRow = this.attempts.length;
-          this.currentCol = 0;
-        }
-      });
+
+        // Set currentRow to the next empty row after all attempts are displayed
+        this.currentRow = this.attempts.length;
+        this.currentCol = 0;  // Reset current column to the beginning for new input
     }
-  }
+}
+
   
 
 
@@ -177,6 +155,10 @@ export class GameComponent implements OnInit {
             // Handle word success (e.g., update the board, mark word as valid)
             this.gameservice.addAttemptsData(this.currentWord, this.currentWord === this.solution, this.currentRow)
             this.animateWord(this.board[this.currentRow]);
+
+            this.currentRow++; // Increment the row for the next word
+            this.currentCol = 0; // Reset column for new row
+            this.currentWord = ''; // Clear current word
           } else {
             this.wiggleRow(this.currentRow);
             this.showMessage('Not a word diva 😭', 1500);
