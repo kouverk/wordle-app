@@ -25,7 +25,6 @@ export class GameService {
     if (isPlatformBrowser(this.platformId)) {
       this.updateGame(this.getStoredGame());
       this.updateAttempts(this.getStoredAttempts());
-      console.log(this.getStoredAttempts())
     }
   }
 
@@ -122,7 +121,6 @@ export class GameService {
           const game = response.game;
           this.updateGame(response.game);
           this.updateAttempts(response.attempts)
-          console.log('user', player1_id, game.player_turn);
           if (player1_id == game.player_turn) {
             this.router.navigate(['/game']);
           } else {

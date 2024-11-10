@@ -31,6 +31,7 @@ export class GameComponent implements OnInit {
   wiggleDuration = 650; 
   messageIsVisible: boolean = false; 
   message: string = ''; 
+  isInitialLoad: boolean = true; 
 
   constructor(private gameservice: GameService, private renderer: Renderer2, private el: ElementRef, private cdr: ChangeDetectorRef){}
 
@@ -38,7 +39,6 @@ export class GameComponent implements OnInit {
     // Subscribe to game updates
     this.gameservice.game$.subscribe(game => {
       this.game = game; // Update the component's game variable
-      console.log(this.game)
       if (this.game == null){
         // Start single player game by retrieving a solution word
         this.fetchSolution();
@@ -52,9 +52,11 @@ export class GameComponent implements OnInit {
     // Subscribe to attempts updates
     this.gameservice.attempts$.subscribe(attempts => {
       this.attempts = attempts; // Update attempts variable
-      console.log('heres attempts in game', this.attempts)
       this.cdr.detectChanges();  // Manually trigger change detection
-      this.updateBoardWithAttempts(); // Update board display with attempts
+      if (this.isInitialLoad){ //Only update the template if this hasn't fire yet so it doesnt conflict with the animateWord sequence
+        this.updateBoardWithAttempts(); // Update board display with attempts
+        this.isInitialLoad = false; 
+      }
     });
 
     // Listen for keyboard events using Renderer2
@@ -78,6 +80,7 @@ export class GameComponent implements OnInit {
 
   // Update board based on attempts data
   updateBoardWithAttempts(): void {
+    console.log('update board with attempts ')
     if (this.attempts && this.attempts.length) {
         // Loop through each attempt and update the board
         this.attempts.forEach((attempt, attemptIndex) => {
@@ -115,8 +118,6 @@ export class GameComponent implements OnInit {
     }
 }
 
-  
-
 
   // Handle key press events
   handleKeyPress(event: KeyboardEvent): void {
@@ -145,33 +146,6 @@ export class GameComponent implements OnInit {
     }
   }
 
-  handleEnter(): void {
-    // Check if the current word is complete and can be submitted
-    if (this.currentCol === 5) {      
-      // Check if the word exists in the database
-      this.gameservice.checkWord(this.currentWord).subscribe({
-        next: (data) => {
-          if (data.exists) {
-            // Handle word success (e.g., update the board, mark word as valid)
-            this.gameservice.addAttemptsData(this.currentWord, this.currentWord === this.solution, this.currentRow)
-            this.animateWord(this.board[this.currentRow]);
-
-            this.currentRow++; // Increment the row for the next word
-            this.currentCol = 0; // Reset column for new row
-            this.currentWord = ''; // Clear current word
-          } else {
-            this.wiggleRow(this.currentRow);
-            this.showMessage('Not a word diva 😭', 1500);
-          }
-        },
-        error: (error) => {
-          console.error('Error checking word:', error);
-        }
-      });
-      // Move to the next row after word submission
-    } 
-  }
-
   handleDelete(): void {
     if (this.currentCol > 0) {
       this.currentCol--;
@@ -193,59 +167,78 @@ export class GameComponent implements OnInit {
     this.handleDelete();
   }
 
-  animateWord(attemptedWord: string[]): void {
+  handleEnter(): void {
+    if (this.currentCol === 5) {      
+      this.gameservice.checkWord(this.currentWord).subscribe({
+        next: (data) => {
+          if (data.exists) {
+            this.gameservice.addAttemptsData(this.currentWord, this.currentWord === this.solution, this.currentRow);
+            this.animateWord(this.board[this.currentRow], this.currentRow); // Pass currentRow
+          } else {
+            this.wiggleRow(this.currentRow);
+            this.showMessage('Not a word diva 😭', 1500);
+          }
+        },
+        error: (error) => {
+          console.error('Error checking word:', error);
+        }
+      });
+    }
+  }
+
+  animateWord(attemptedWord: string[], row: number): void {  // Accept row as parameter
     this.animationInProgress = true;
     
     attemptedWord.forEach((letter, index) => {
       setTimeout(() => {
-        this.flipLetter(index, letter);
-      }, index * this.newFlipDelay); // Adjust the timing here for the delay
+        this.flipLetter(index, letter, row); // Pass row to flipLetter
+      }, index * this.newFlipDelay);
     });
-
-    // Move to the next row and update currentWord after the last animation
+  
     setTimeout(() => {
       this.currentRow++;
       this.currentCol = 0;
       this.currentWord = attemptedWord.join('');
       this.animationInProgress = false;
-
-      // Check if the guessed word matches the solution
+  
       if (this.currentWord === this.solution) {
-        const currentRowElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow})`);
-        this.triggerWaveAnimation(currentRowElement); // Trigger wave animation
+        const currentRowElement = this.el.nativeElement.querySelector(`.row:nth-child(${row + 1})`);
+        this.triggerWaveAnimation(currentRowElement);
         setTimeout(() => {
           this.showMessage('Great Job Pwincess 🤩', 4000);
-        }, this.waveDuration); // This should be equal to the wave duration from the css
+        }, this.waveDuration);
       }
-    }, attemptedWord.length * this.nextRowDelay); // After all letters have flipped
+    }, attemptedWord.length * this.nextRowDelay);
   }
 
-  flipLetter(index: number, letter: string): void {
-    const currentAttempt = this.board[this.currentRow]; // The current word attempt
-    const correctWord = this.solution.split('');        // The solution word split into letters
-  
-    // Track counts of letters in the solution and matched letters
+  flipLetter(index: number, letter: string, row: number): void {
+    const currentAttempt = this.board[row];
+    const correctWord = this.solution.split('');
     const solutionLetterCounts: { [key: string]: number } = {};
     const correctMatches: boolean[] = Array(currentAttempt.length).fill(false);
   
-    // Initialize letter counts for the solution
+    // Initialize counts for each letter in the solution
     correctWord.forEach(letter => {
       solutionLetterCounts[letter] = (solutionLetterCounts[letter] || 0) + 1;
     });
   
-    // First pass: assign "correct" class to letters in the correct position
+    // First pass: Mark correct-position letters with "correct" class after flip animation
     currentAttempt.forEach((letter, index) => {
-      const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow + 1}) .cell:nth-child(${index + 1})`);
+      const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${row + 1}) .cell:nth-child(${index + 1})`);
       const isCorrectPosition = letter === correctWord[index];
   
       if (isCorrectPosition) {
+        // Start the flip animation
         setTimeout(() => {
           this.renderer.addClass(cellElement, 'flip');
+  
+          // Add the correct color class after the flip starts
           setTimeout(() => {
             this.renderer.addClass(cellElement, 'correct'); // Green for correct position
             cellElement.textContent = letter;
             this.updateKeyboard(letter, 'correct');
-          }, this.newColorDelay);
+          }, this.newColorDelay); // Delay for color change to occur during flip
+  
         }, index * this.newFlipDelay);
   
         correctMatches[index] = true; // Mark this letter as correctly matched
@@ -253,9 +246,9 @@ export class GameComponent implements OnInit {
       }
     });
   
-    // Second pass: assign "present" class to letters in the wrong position if they exist in solution
+    // Second pass: Mark letters that are present but in the wrong position with "present"
     currentAttempt.forEach((letter, index) => {
-      const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${this.currentRow + 1}) .cell:nth-child(${index + 1})`);
+      const cellElement = this.el.nativeElement.querySelector(`.row:nth-child(${row + 1}) .cell:nth-child(${index + 1})`);
       const isCorrectPosition = correctMatches[index];
   
       if (!isCorrectPosition && solutionLetterCounts[letter] > 0) {
@@ -268,9 +261,9 @@ export class GameComponent implements OnInit {
           }, this.newColorDelay);
         }, index * this.newFlipDelay);
   
-        solutionLetterCounts[letter]--; // Reduce the count of this letter in solution
+        solutionLetterCounts[letter]--;
       } else if (!isCorrectPosition) {
-        // If the letter is not in the solution
+        // If the letter is absent
         setTimeout(() => {
           this.renderer.addClass(cellElement, 'flip');
           setTimeout(() => {
@@ -282,7 +275,6 @@ export class GameComponent implements OnInit {
       }
     });
   }
-  
 
   updateKeyboard(letter: string, status: string): void {
     const keyElement = this.el.nativeElement.querySelector(`.key[data-key="${letter.toLowerCase()}"]`);
@@ -308,9 +300,7 @@ export class GameComponent implements OnInit {
   showMessage(message: string, duration: number): void {
     this.message = message;
     this.messageIsVisible = true;
-    console.log('we have set timer for show message')
     setTimeout(() => {
-      console.log('we have finished timer for show message')
       this.messageIsVisible = false;
       this.message = '';
     }, duration);
