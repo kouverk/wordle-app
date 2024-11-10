@@ -32,7 +32,8 @@ export class ChooseWordComponent {
   selectWord(word: { word: string }): void {
     this.selectedWord = word;
     console.log('Selected word:', word);
-    this.router.navigate(['/game']);
+    this.router.navigate(['/wait']);
     // Here, you can add any additional action you want to perform on word selection
+    // Add start game hanlder here 
   }
 }

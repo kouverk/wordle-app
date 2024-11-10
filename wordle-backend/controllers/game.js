@@ -298,9 +298,10 @@ const addAttempt = (req, res) => {
 
 //Start a multiplayer game
 const start = (req, res) => {
-  const { player1_id, player2_id } = req.body;
-  
-  db.query('INSERT INTO games (player1_id, player2_id) VALUES (?, ?)', [player1_id, player2_id], 
+  const { player1_id, player2_id, word} = req.body;
+  query = `INSERT INTO multiplayer_games (player1_id, player2_id, current_turn_num, word, player1_score, player2_score, status, completed_at, last_turn_time, player_turn) 
+           VALUES (?, ?, 0, ?, 0, 0, in_progres, null, null, ?)`
+  db.query(query, [player1_id, player2_id, word, player1_id], 
       (err, result) => {
           if (err) return res.status(500).json({ error: err.message });
           res.json({ gameId: result.insertId });
