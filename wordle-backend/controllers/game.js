@@ -90,7 +90,8 @@ const retrieveMultiPlayerGame = (req, res) => {
         }
         return res.json({
           game: game,
-          attempts: attemptsResults.length > 0 ? attemptsResults : null // Return attempts or null if empty
+          attempts: attemptsResults.length > 0 ? attemptsResults : null, // Return attempts or null if empty
+          newGame: false
         });
       });
     } else { 
@@ -134,7 +135,8 @@ const retrieveMultiPlayerGame = (req, res) => {
             }
             return res.json({
               game: newResults[0],
-              attempts: null // Set to null for the newly created game as no attempts exist yet
+              attempts: null, // Set to null for the newly created game as no attempts exist yet
+              newGame: true
             });
           });
         });

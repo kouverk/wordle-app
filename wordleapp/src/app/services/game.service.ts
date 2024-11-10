@@ -121,10 +121,14 @@ export class GameService {
           const game = response.game;
           this.updateGame(response.game);
           this.updateAttempts(response.attempts)
-          if (player1_id == game.player_turn) {
-            this.router.navigate(['/game']);
+          if (game.newGame){ //Check if user is challenging a new game with player2 or if returning to pre-existing game
+            this.router.navigate(['/choose-word'])
           } else {
-            this.router.navigate(['/wait']);
+            if (player1_id == game.player_turn) {
+              this.router.navigate(['/game']);
+            } else {
+              this.router.navigate(['/wait']);
+            }
           }
         },
         error: (error) => {
