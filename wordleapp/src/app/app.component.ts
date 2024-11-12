@@ -35,7 +35,7 @@ export class AppComponent {
     // Fetch users if the user is logged in
     this.authService.isLoggedIn$.subscribe(isLoggedIn => {
       this.isLoggedIn = isLoggedIn
-      if (isLoggedIn) {
+      if (isLoggedIn) { 
         const user_id = localStorage.getItem('user_id');
         if (user_id) {
           this.loggedin_id = parseInt(user_id, 10);

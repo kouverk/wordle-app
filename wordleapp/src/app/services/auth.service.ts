@@ -12,26 +12,12 @@ export class AuthService {
   private apiUrl = 'http://localhost:3000'; // Your backend URL
   public loggedIn: boolean = false; 
   private jwtHelper: JwtHelperService; 
-  private isLoggedIn: boolean = false; 
   private isLoggedInSubject = new BehaviorSubject<boolean>(false);
   public isLoggedIn$ = this.isLoggedInSubject.asObservable();
 
   constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: object) {
     this.jwtHelper = new JwtHelperService(); // Initialize it
     this.updateLoginStatus();
-  }
-
-  private updateLoginStatus(){
-    const isLoggedIn = this.checkLoginStatus();
-    this.isLoggedInSubject.next(isLoggedIn);
-  }
-
-  private checkLoginStatus() {
-    if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem('token');
-      return !!(token && !this.jwtHelper.isTokenExpired(token));
-    }
-    return false;
   }
 
   login(credentials: any): Observable<any> {
@@ -55,6 +41,11 @@ export class AuthService {
       return !!(token && !this.jwtHelper.isTokenExpired(token));  
     }
     return false; // Not in browser, so return false
+  }
+
+  private updateLoginStatus(){
+    const isLoggedIn = this.userIsLoggedIn();
+    this.isLoggedInSubject.next(isLoggedIn);
   }
   
   logout() {
