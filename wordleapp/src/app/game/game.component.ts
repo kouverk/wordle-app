@@ -29,9 +29,10 @@ export class GameComponent implements OnInit {
   nextRowDelay = this.newFlipDelay + this.newColorDelay; 
   waveDuration = 300; 
   wiggleDuration = 650; 
-  messageIsVisible: boolean = false; 
-  message: string = ''; 
-  isInitialLoad: boolean = true; 
+  messageIsVisible: boolean = false;
+  message: string = '';
+  isInitialLoad: boolean = true;
+  lastSubmittedRow: number = -1; // Track last row we submitted to prevent duplicates 
 
   constructor(private gameservice: GameService, private renderer: Renderer2, private el: ElementRef, private cdr: ChangeDetectorRef){}
 
@@ -80,8 +81,22 @@ export class GameComponent implements OnInit {
 
   // Update board based on attempts data
   updateBoardWithAttempts(): void {
-    console.log('update board with attempts ')  
+    console.log('update board with attempts ')
     if (this.attempts && this.attempts.length) {
+        // Safeguard: Check if this is a completed game (6 attempts or last attempt was correct)
+        const lastAttempt = this.attempts[this.attempts.length - 1];
+        const isGameComplete = this.attempts.length >= 6 || lastAttempt?.is_correct;
+
+        if (isGameComplete) {
+            console.log('Detected completed game on load, triggering completion handler');
+            if (this.game?.game_type === 'singleplayer') {
+                this.handleSinglePlayerGameComplete(lastAttempt?.is_correct || false);
+            } else if (this.game?.game_type === 'multiplayer') {
+                this.handleMultiplayerTurnComplete(this.attempts.length);
+            }
+            return; // Don't load stale data into board
+        }
+
         // Loop through each attempt and update the board
         this.attempts.forEach((attempt, attemptIndex) => {
             const attemptRow = attemptIndex;  // Use index to determine row directly
@@ -115,6 +130,8 @@ export class GameComponent implements OnInit {
         // Set currentRow to the next empty row after all attempts are displayed
         this.currentRow = this.attempts.length;
         this.currentCol = 0;  // Reset current column to the beginning for new input
+        // Set lastSubmittedRow to the last row that was already submitted
+        this.lastSubmittedRow = this.attempts.length - 1;
     }
 }
 
@@ -122,11 +139,13 @@ export class GameComponent implements OnInit {
   // Handle key press events
   handleKeyPress(event: KeyboardEvent): void {
     const key = event.key.toUpperCase();
-    
+
     // Check if the key pressed is a letter
     if (this.isLetter(key)) {
       this.handleLetterInput(key);
     } else if (key === 'ENTER') {
+      event.preventDefault();
+      event.stopPropagation();
       this.handleEnter();
     } else if (key === 'BACKSPACE' || key === 'DELETE') {
       this.handleDelete();
@@ -168,18 +187,32 @@ export class GameComponent implements OnInit {
   }
 
   handleEnter(): void {
-    if (this.currentCol === 5) {      
+    // Prevent submission while animation is in progress
+    if (this.animationInProgress) {
+      return;
+    }
+    // Prevent duplicate submission for the same row
+    if (this.currentRow === this.lastSubmittedRow) {
+      return;
+    }
+    if (this.currentCol === 5) {
+      this.animationInProgress = true; // Lock immediately to prevent double submission
+      this.lastSubmittedRow = this.currentRow; // Mark this row as submitted
       this.gameservice.checkWord(this.currentWord).subscribe({
         next: (data) => {
           if (data.exists) {
             this.gameservice.addAttemptsData(this.currentWord, this.currentWord === this.solution, this.currentRow);
             this.animateWord(this.board[this.currentRow], this.currentRow); // Pass currentRow
           } else {
+            this.animationInProgress = false; // Unlock since word was invalid
+            this.lastSubmittedRow = -1; // Reset so they can try again on this row
             this.wiggleRow(this.currentRow);
             this.showMessage('Not a word diva 😭', 1500);
           }
         },
         error: (error) => {
+          this.animationInProgress = false; // Unlock on error
+          this.lastSubmittedRow = -1; // Reset so they can try again
           console.error('Error checking word:', error);
         }
       });
@@ -213,6 +246,8 @@ export class GameComponent implements OnInit {
           console.log('Win detected. Game type:', this.game?.game_type, 'multiplayer flag:', this.multiplayer);
           if (this.game?.game_type === 'multiplayer') {
             this.handleMultiplayerTurnComplete(row + 1); // attempts_used = row + 1
+          } else if (this.game?.game_type === 'singleplayer') {
+            this.handleSinglePlayerGameComplete(true);
           }
         }, this.waveDuration);
       } else if (isGameOver) {
@@ -221,6 +256,8 @@ export class GameComponent implements OnInit {
         console.log('Game over. Game type:', this.game?.game_type, 'multiplayer flag:', this.multiplayer);
         if (this.game?.game_type === 'multiplayer') {
           this.handleMultiplayerTurnComplete(6);
+        } else if (this.game?.game_type === 'singleplayer') {
+          this.handleSinglePlayerGameComplete(false);
         }
       }
     }, attemptedWord.length * this.nextRowDelay);
@@ -242,6 +279,13 @@ export class GameComponent implements OnInit {
       }, 2000);
     } else {
       console.log('Not a multiplayer game, skipping completeTurn');
+    }
+  }
+
+  // Handle completing a single player game
+  private handleSinglePlayerGameComplete(won: boolean): void {
+    if (this.game && this.game.game_type === 'singleplayer') {
+      this.gameservice.completeSinglePlayerGame(this.game.game_id, won);
     }
   }
 

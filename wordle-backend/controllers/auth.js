@@ -76,25 +76,25 @@ const assignAvatar = (req, res) => {
 const login = async (req, res) => {
     const { username, password } = req.body;
 
-    // Step 1: Retrieve user data and determine game type
+    // Step 1: Retrieve user data and determine game type (only in_progress games)
     const userQuery = `
-        SELECT u.id AS user_id, u.username, u.password, u.avatar_num, a.url AS avatar_url, 
-               g.game_id, g.game_type 
-        FROM users u 
-        LEFT JOIN avatars a ON u.avatar_num = a.id 
+        SELECT u.id AS user_id, u.username, u.password, u.avatar_num, a.url AS avatar_url,
+               g.game_id, g.game_type
+        FROM users u
+        LEFT JOIN avatars a ON u.avatar_num = a.id
         LEFT JOIN (
             SELECT mpg.id AS game_id, 'multiplayer' AS game_type, mpg.last_turn_time AS last_turn_time
-            FROM multiplayer_games mpg 
-            LEFT JOIN users u1 ON mpg.player1_id = u1.id 
-            LEFT JOIN users u2 ON mpg.player2_id = u2.id 
-            WHERE u1.username = ? OR u2.username = ?
+            FROM multiplayer_games mpg
+            LEFT JOIN users u1 ON mpg.player1_id = u1.id
+            LEFT JOIN users u2 ON mpg.player2_id = u2.id
+            WHERE (u1.username = ? OR u2.username = ?) AND mpg.status = 'in_progress'
 
             UNION ALL
 
             SELECT spg.id AS game_id, 'singleplayer' AS game_type, spg.last_turn_time AS last_turn_time
-            FROM single_player_games spg 
-            LEFT JOIN users u ON spg.player_id = u.id 
-            WHERE u.username = ?
+            FROM single_player_games spg
+            LEFT JOIN users u ON spg.player_id = u.id
+            WHERE u.username = ? AND spg.status = 'in_progress'
             ORDER BY last_turn_time DESC
             LIMIT 1
         ) AS g ON u.username = ?
@@ -119,18 +119,22 @@ const login = async (req, res) => {
         let gameQuery, gameParams;
         if (userData.game_type === 'multiplayer') {
             gameQuery = `
-                SELECT id, 'multiplayer' AS game_type, player1_id, player2_id, player_turn, 
-                       current_turn_num, word, player1_score, player2_score, status, completed_at 
-                FROM multiplayer_games 
-                WHERE id = ?;
+                SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+                       u1.username AS player1_username, u2.username AS player2_username, player_turn,
+                       current_turn_num, word, player1_score, player2_score, status, completed_at
+                FROM multiplayer_games mpg
+                LEFT JOIN users u1 ON mpg.player1_id = u1.id
+                LEFT JOIN users u2 ON mpg.player2_id = u2.id
+                WHERE mpg.id = ?;
             `;
             gameParams = [userData.game_id];
         } else {
             gameQuery = `
-                SELECT id, 'singleplayer' AS game_type, player_id AS player1_id, 
-                       current_turn_num, word, status, completed_at 
-                FROM single_player_games 
-                WHERE id = ?;
+                SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id AS player1_id,
+                       u.username AS player1_username, current_turn_num, word, status, completed_at
+                FROM single_player_games spg
+                LEFT JOIN users u ON spg.player_id = u.id
+                WHERE spg.id = ?;
             `;
             gameParams = [userData.game_id];
         }

@@ -150,14 +150,14 @@ const retrieveMultiPlayerGame = (req, res) => {
 const retrieveSinglePlayerGame = (req, res) => {
   const { player_id } = req.query;
 
-  // Step 1: Try to retrieve an existing single-player game
+  // Step 1: Try to retrieve an existing in-progress single-player game
   const selectQuery = `
-    SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id, 
-           u.username AS player_username, current_turn_num, word, status, 
-           completed_at, spg.last_turn_time 
-    FROM single_player_games spg 
-    LEFT JOIN users u ON spg.player_id = u.id 
-    WHERE spg.player_id = ?
+    SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id AS player1_id,
+           u.username AS player1_username, current_turn_num, word, status,
+           completed_at, spg.last_turn_time
+    FROM single_player_games spg
+    LEFT JOIN users u ON spg.player_id = u.id
+    WHERE spg.player_id = ? AND spg.status = 'in_progress'
     ORDER BY last_turn_time DESC
     LIMIT 1
   `;
@@ -211,11 +211,11 @@ const retrieveSinglePlayerGame = (req, res) => {
           // Step 4: Retrieve the newly created game record
           const newGameId = insertResult.insertId;
           const newSelectQuery = `
-            SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id, 
-                   u.username AS player_username, current_turn_num, word, status, 
-                   completed_at, spg.last_turn_time 
-            FROM single_player_games spg 
-            LEFT JOIN users u ON spg.player_id = u.id 
+            SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id AS player1_id,
+                   u.username AS player1_username, current_turn_num, word, status,
+                   completed_at, spg.last_turn_time
+            FROM single_player_games spg
+            LEFT JOIN users u ON spg.player_id = u.id
             WHERE spg.id = ?
           `;
 
@@ -422,4 +422,23 @@ const checkGameStatus = (req, res) => {
   });
 };
 
-module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord, completeTurn, checkGameStatus}
+// Complete a single player game (mark as completed)
+const completeSinglePlayerGame = (req, res) => {
+  const { game_id, won } = req.body;
+
+  const updateQuery = `
+    UPDATE single_player_games
+    SET status = 'completed',
+        completed_at = NOW()
+    WHERE id = ?
+  `;
+
+  db.query(updateQuery, [game_id], (err) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    return res.json({ success: true, won: won });
+  });
+};
+
+module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord, completeTurn, checkGameStatus, completeSinglePlayerGame}

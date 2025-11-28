@@ -232,4 +232,27 @@ export class GameService {
       }
     });
   }
+
+  // Complete a single player game and start a new one
+  completeSinglePlayerGame(game_id: number, won: boolean) {
+    return this.http.post<{ success: boolean; won: boolean }>(
+      `${this.apiUrl}/complete-singleplayer-game`,
+      { game_id, won }
+    ).subscribe({
+      next: () => {
+        // Clear current game data and start a new game
+        this.clearGameData();
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+          // Small delay before starting new game so user can see result
+          setTimeout(() => {
+            this.retrieveSinglePlayerGame(Number(userId));
+          }, 3000);
+        }
+      },
+      error: (error) => {
+        console.error('Failed to complete single player game:', error);
+      }
+    });
+  }
 }
