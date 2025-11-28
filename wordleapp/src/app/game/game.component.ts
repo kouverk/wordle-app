@@ -39,24 +39,40 @@ export class GameComponent implements OnInit {
   ngOnInit() {
     // Subscribe to game updates
     this.gameservice.game$.subscribe(game => {
+      const previousGameId = this.game?.game_id;
       this.game = game; // Update the component's game variable
-      if (this.game == null){
-        // Start single player game by retrieving a solution word
-        this.fetchSolution();
+
+      if (this.game == null) {
+        // No game loaded - only fetch a random solution if user is NOT logged in
+        // (logged in users will get a new game via retrieveSinglePlayerGame)
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+          this.fetchSolution();
+        }
         this.multiplayer = false;
       } else {
-        this.multiplayer = true; 
-        this.solution = this.game.word; 
+        // Game loaded from server
+        this.multiplayer = this.game.game_type === 'multiplayer';
+        this.solution = this.game.word;
+        console.log('SOLUTION:', this.solution);
+
+        // If this is a different game than before, reset the board
+        if (previousGameId !== this.game.game_id) {
+          this.resetBoard();
+        }
       }
     });
 
     // Subscribe to attempts updates
     this.gameservice.attempts$.subscribe(attempts => {
+      const hadAttempts = this.attempts && this.attempts.length > 0;
       this.attempts = attempts; // Update attempts variable
       this.cdr.detectChanges();  // Manually trigger change detection
-      if (this.isInitialLoad){ //Only update the template if this hasn't fire yet so it doesnt conflict with the animateWord sequence
+
+      // Update board if this is initial load OR if attempts were cleared (new game)
+      if (this.isInitialLoad || (!attempts && hadAttempts)) {
         this.updateBoardWithAttempts(); // Update board display with attempts
-        this.isInitialLoad = false; 
+        this.isInitialLoad = false;
       }
     });
 
@@ -71,7 +87,7 @@ export class GameComponent implements OnInit {
     this.gameservice.getSolution().subscribe({
       next: (data) => {
         this.solution = data.word;
-        console.log(this.solution);
+        console.log('SOLUTION:', this.solution);
       },
       error: (error) => {
         console.error('Error fetching solution word:', error);
@@ -79,9 +95,47 @@ export class GameComponent implements OnInit {
     });
   }
 
+  // Reset the board for a new game
+  resetBoard(): void {
+    // Clear the board array
+    this.board = Array(6).fill(null).map(() => Array(5).fill(''));
+    this.currentRow = 0;
+    this.currentCol = 0;
+    this.currentWord = '';
+    this.lastSubmittedRow = -1;
+    this.isInitialLoad = true;
+    this.animationInProgress = false;
+
+    // Clear the DOM - remove classes from all cells and keyboard keys
+    const cells = this.el.nativeElement.querySelectorAll('.cell');
+    cells.forEach((cell: HTMLElement) => {
+      cell.textContent = '';
+      this.renderer.removeClass(cell, 'correct');
+      this.renderer.removeClass(cell, 'present');
+      this.renderer.removeClass(cell, 'absent');
+      this.renderer.removeClass(cell, 'flip');
+      this.renderer.removeClass(cell, 'wave');
+    });
+
+    const keys = this.el.nativeElement.querySelectorAll('.key');
+    keys.forEach((key: HTMLElement) => {
+      this.renderer.removeClass(key, 'correct');
+      this.renderer.removeClass(key, 'present');
+      this.renderer.removeClass(key, 'absent');
+    });
+  }
+
   // Update board based on attempts data
   updateBoardWithAttempts(): void {
-    console.log('update board with attempts ')
+    console.log('update board with attempts');
+
+    // For multiplayer: if there's no word set, we're in "choose word" state
+    // Don't process any attempts - they're from previous turns
+    if (this.game?.game_type === 'multiplayer' && !this.game.word) {
+      console.log('Multiplayer game with no word set - skipping attempt processing');
+      return;
+    }
+
     if (this.attempts && this.attempts.length) {
         // Safeguard: Check if this is a completed game (6 attempts or last attempt was correct)
         const lastAttempt = this.attempts[this.attempts.length - 1];

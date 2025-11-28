@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { SharedModule } from 'src/app/modules/shared.module';
 import { GameService } from 'src/app/services/game.service';
@@ -20,10 +21,16 @@ export class WaitComponent implements OnInit, OnDestroy {
   opponent_username: string | null = null;
   private pollingSubscription: Subscription | null = null;
 
-  constructor(private gameservice: GameService, private router: Router) {}
+  constructor(
+    private gameservice: GameService,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit() {
-    this.loggedin_id = Number(localStorage.getItem('user_id'));
+    if (isPlatformBrowser(this.platformId)) {
+      this.loggedin_id = Number(localStorage.getItem('user_id'));
+    }
 
     this.gameservice.game$.subscribe(game => {
       this.game = game;

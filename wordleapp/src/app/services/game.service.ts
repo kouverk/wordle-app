@@ -125,9 +125,15 @@ export class GameService {
             // New game - challenger picks a word for opponent
             this.router.navigate(['/choose-word']);
           } else {
-            // Existing game - check whose turn it is
+            // Existing game - check whose turn it is and if there's a word to guess
             if (player1_id == game.player_turn) {
-              this.router.navigate(['/game']);
+              // It's our turn - but do we have a word to guess or need to pick one?
+              if (game.word) {
+                this.router.navigate(['/game']);
+              } else {
+                // No word set - we need to choose a word for opponent
+                this.router.navigate(['/choose-word']);
+              }
             } else {
               this.router.navigate(['/wait']);
             }

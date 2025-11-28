@@ -77,10 +77,20 @@ const retrieveMultiPlayerGame = (req, res) => {
     if (results.length > 0) {
       const game = results[0];
 
-      // Step 2: Retrieve attempts for the existing game
+      // If word is null, the current turn hasn't started yet (player needs to choose a word)
+      // Don't return attempts from previous turns
+      if (!game.word) {
+        return res.json({
+          game: game,
+          attempts: null,
+          newGame: false
+        });
+      }
+
+      // Step 2: Retrieve attempts for the existing game (only current turn's attempts)
       const attemptsQuery = `
-        SELECT * FROM multiplayer_game_attempts 
-        WHERE game_id = ? 
+        SELECT * FROM multiplayer_game_attempts
+        WHERE game_id = ?
         ORDER BY created_at ASC
       `;
 
@@ -90,7 +100,7 @@ const retrieveMultiPlayerGame = (req, res) => {
         }
         return res.json({
           game: game,
-          attempts: attemptsResults.length > 0 ? attemptsResults : null, // Return attempts or null if empty
+          attempts: attemptsResults.length > 0 ? attemptsResults : null,
           newGame: false
         });
       });
@@ -394,7 +404,6 @@ const completeTurn = (req, res) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      console.log('completeTurn returning game:', results[0]);
       return res.json({ game: results[0], turnCompleted: true });
     });
   });

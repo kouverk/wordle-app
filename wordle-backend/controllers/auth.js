@@ -143,26 +143,9 @@ const login = async (req, res) => {
             if (err) return res.status(500).json({ error: err.message });
             const mostRecentGame = gameResults[0] || null;
 
-            // Step 3: Query attempt data based on game_id
-            let attemptsQuery;
-            if (userData.game_type === 'multiplayer') {
-                attemptsQuery = `
-                    SELECT * FROM multiplayer_game_attempts 
-                    WHERE game_id = ? 
-                    ORDER BY attempt_num ASC;
-                `;
-            } else {
-                attemptsQuery = `
-                    SELECT * FROM single_player_game_attempts 
-                    WHERE game_id = ? 
-                    ORDER BY attempt_num ASC;
-                `;
-            }
-
-            db.query(attemptsQuery, [userData.game_id], (err, attempts) => {
-                if (err) return res.status(500).json({ error: err.message });
-
-                // Construct response with user data, game data, and attempt data separately
+            // If no game or multiplayer game with no word set, don't fetch attempts
+            // (attempts from previous turns shouldn't be returned)
+            if (!mostRecentGame || (userData.game_type === 'multiplayer' && !mostRecentGame.word)) {
                 const response = {
                     token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' }),
                     user: {
@@ -171,15 +154,42 @@ const login = async (req, res) => {
                         avatar_num: userData.avatar_num,
                         avatar_url: userData.avatar_url
                     },
-                    game: mostRecentGame, // Return the most recent game object
-                    attempts // Return attempts separately
+                    game: mostRecentGame,
+                    attempts: null
                 };
+                return res.json(response);
+            }
 
-                // If no recent game found, return game as null
-                if (!mostRecentGame) {
-                    response.game = null;
-                    response.attempts = null; 
-                }
+            // Step 3: Query attempt data based on game_id
+            let attemptsQuery;
+            if (userData.game_type === 'multiplayer') {
+                attemptsQuery = `
+                    SELECT * FROM multiplayer_game_attempts
+                    WHERE game_id = ?
+                    ORDER BY attempt_num ASC;
+                `;
+            } else {
+                attemptsQuery = `
+                    SELECT * FROM single_player_game_attempts
+                    WHERE game_id = ?
+                    ORDER BY attempt_num ASC;
+                `;
+            }
+
+            db.query(attemptsQuery, [userData.game_id], (err, attempts) => {
+                if (err) return res.status(500).json({ error: err.message });
+
+                const response = {
+                    token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' }),
+                    user: {
+                        user_id: userData.user_id,
+                        username: userData.username,
+                        avatar_num: userData.avatar_num,
+                        avatar_url: userData.avatar_url
+                    },
+                    game: mostRecentGame,
+                    attempts
+                };
 
                 res.json(response);
             });
