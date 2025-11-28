@@ -2,3 +2,6 @@ wordleapp/node_modules/
 wordle-backend/node_modules/
 wordleapp/notes/
 wordle-app.code-workspace
+.DS_STORE
+wordle-backend/.DS_STORE
+.nvmrc

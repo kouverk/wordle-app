@@ -80,7 +80,7 @@ export class GameComponent implements OnInit {
 
   // Update board based on attempts data
   updateBoardWithAttempts(): void {
-    console.log('update board with attempts ')
+    console.log('update board with attempts ')  
     if (this.attempts && this.attempts.length) {
         // Loop through each attempt and update the board
         this.attempts.forEach((attempt, attemptIndex) => {
