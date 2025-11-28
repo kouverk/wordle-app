@@ -69,10 +69,10 @@ export class AppComponent {
 
   // Method to handle single-player game selection
   startSinglePlayer() {
-    if (this.loggedin_id) {  // Proceed if logged in
+    if (this.loggedin_id) {
+      this.gameService.retrieveSinglePlayerGame(this.loggedin_id);
       this.sidenav.close();
-      // Additional logic for starting single-player game can go here
-    } 
+    }
   }
 
   // Method to close the sidenav

@@ -120,10 +120,12 @@ export class GameService {
         next: (response) => {
           const game = response.game;
           this.updateGame(response.game);
-          this.updateAttempts(response.attempts)
-          if (game.newGame){ //Check if user is challenging a new game with player2 or if returning to pre-existing game
-            this.router.navigate(['/choose-word'])
+          this.updateAttempts(response.attempts);
+          if (response.newGame) {
+            // New game - challenger picks a word for opponent
+            this.router.navigate(['/choose-word']);
           } else {
+            // Existing game - check whose turn it is
             if (player1_id == game.player_turn) {
               this.router.navigate(['/game']);
             } else {
@@ -157,6 +159,20 @@ export class GameService {
 
   getWordChoices() {
     return this.http.get<any>(`${this.apiUrl}/choose-word`);
+  }
+
+  // Update the word for a multiplayer game (when challenger picks a word)
+  updateGameWord(game_id: number, word: string) {
+    return this.http.post<{ game: Game }>(`${this.apiUrl}/update-game-word`, { game_id, word })
+      .subscribe({
+        next: (response) => {
+          this.updateGame(response.game);
+          this.router.navigate(['/wait']);
+        },
+        error: (error) => {
+          console.error('Failed to update game word:', error);
+        }
+      });
   }
 
   getCurrentUser() {

@@ -296,26 +296,41 @@ const addAttempt = (req, res) => {
 
 
 
-//Start a multiplayer game
-const start = (req, res) => {
-  const { player1_id, player2_id, word} = req.body;
-  query = `INSERT INTO multiplayer_games (player1_id, player2_id, current_turn_num, word, player1_score, player2_score, status, completed_at, last_turn_time, player_turn) 
-           VALUES (?, ?, 0, ?, 0, 0, in_progres, null, null, ?)`
-  db.query(query, [player1_id, player2_id, word, player1_id], 
-      (err, result) => {
-          if (err) return res.status(500).json({ error: err.message });
-          res.json({ gameId: result.insertId });
-      });
+// Update the word for a multiplayer game (used when challenger picks a word)
+const updateGameWord = (req, res) => {
+  const { game_id, word } = req.body;
+
+  const updateQuery = `UPDATE multiplayer_games SET word = ?, last_turn_time = NOW() WHERE id = ?`;
+
+  db.query(updateQuery, [word, game_id], (err, result) => {
+    if (err) {
+      console.error('Failed to update game word:', err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    // Return the updated game
+    const selectQuery = `
+      SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+             u1.username AS player1_username, u2.username AS player2_username, player_turn,
+             current_turn_num, word, player1_score, player2_score, status, completed_at,
+             mpg.last_turn_time
+      FROM multiplayer_games mpg
+      LEFT JOIN users u1 ON mpg.player1_id = u1.id
+      LEFT JOIN users u2 ON mpg.player2_id = u2.id
+      WHERE mpg.id = ?
+    `;
+
+    db.query(selectQuery, [game_id], (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      return res.json({ game: results[0] });
+    });
+  });
 };
 
-const submit = (req, res) => {
-  const { gameId, word } = req.body;
-
-  db.query('UPDATE games SET current_word = ?, current_turn = (current_turn + 1) % 2 WHERE id = ?', [word, gameId], 
-      (err) => {
-          if (err) return res.status(500).json({ error: err.message });
-          res.json({ message: 'Word submitted successfully' });
-      });
-}
-
-module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, start, submit}
+module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord}
