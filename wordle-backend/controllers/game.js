@@ -172,9 +172,9 @@ const retrieveSinglePlayerGame = (req, res) => {
 
       // Step 2: Retrieve attempts for the existing game
       const attemptsQuery = `
-        SELECT * FROM attempts 
-        WHERE game_id = ? 
-        ORDER BY attempt_time ASC
+        SELECT * FROM single_player_game_attempts
+        WHERE game_id = ?
+        ORDER BY created_at ASC
       `;
 
       db.query(attemptsQuery, [game.game_id], (err, attemptsResults) => {
@@ -296,20 +296,86 @@ const addAttempt = (req, res) => {
 
 
 
-// Update the word for a multiplayer game (used when challenger picks a word)
+// Update the word for a multiplayer game (used when player picks a word for opponent)
+// After setting the word, switch player_turn to the opponent who will guess it
 const updateGameWord = (req, res) => {
   const { game_id, word } = req.body;
 
-  const updateQuery = `UPDATE multiplayer_games SET word = ?, last_turn_time = NOW() WHERE id = ?`;
+  // First get the current game to determine who the opponent is
+  const getGameQuery = `SELECT player1_id, player2_id, player_turn FROM multiplayer_games WHERE id = ?`;
 
-  db.query(updateQuery, [word, game_id], (err, result) => {
+  db.query(getGameQuery, [game_id], (err, gameResults) => {
     if (err) {
-      console.error('Failed to update game word:', err);
       return res.status(500).json({ error: err.message });
     }
 
-    if (result.affectedRows === 0) {
+    if (gameResults.length === 0) {
       return res.status(404).json({ error: 'Game not found' });
+    }
+
+    const game = gameResults[0];
+    // Switch turn to the opponent (who will guess the word)
+    const opponentId = game.player_turn === game.player1_id ? game.player2_id : game.player1_id;
+
+    const updateQuery = `
+      UPDATE multiplayer_games
+      SET word = ?, player_turn = ?, last_turn_time = NOW()
+      WHERE id = ?
+    `;
+
+    db.query(updateQuery, [word, opponentId, game_id], (err, result) => {
+      if (err) {
+        console.error('Failed to update game word:', err);
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+
+      // Return the updated game
+      const selectQuery = `
+        SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+               u1.username AS player1_username, u2.username AS player2_username, player_turn,
+               current_turn_num, word, player1_score, player2_score, status, completed_at,
+               mpg.last_turn_time
+        FROM multiplayer_games mpg
+        LEFT JOIN users u1 ON mpg.player1_id = u1.id
+        LEFT JOIN users u2 ON mpg.player2_id = u2.id
+        WHERE mpg.id = ?
+      `;
+
+      db.query(selectQuery, [game_id], (err, results) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        return res.json({ game: results[0] });
+      });
+    });
+  });
+};
+
+// Complete current turn - player who finished will now pick a word for opponent
+const completeTurn = (req, res) => {
+  const { game_id, player_id, attempts_used } = req.body;
+  console.log('completeTurn called:', { game_id, player_id, attempts_used });
+
+  // The player who just finished (player_id) now gets to pick a word for their opponent
+  // So player_turn stays with them until they pick a word via updateGameWord
+  // We increment turn number and clear the word (NULL = waiting for word selection)
+
+  const updateQuery = `
+    UPDATE multiplayer_games
+    SET player_turn = ?,
+        word = NULL,
+        current_turn_num = current_turn_num + 1,
+        last_turn_time = NOW()
+    WHERE id = ?
+  `;
+
+  db.query(updateQuery, [player_id, game_id], (err) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
     }
 
     // Return the updated game
@@ -328,9 +394,32 @@ const updateGameWord = (req, res) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      return res.json({ game: results[0] });
+      console.log('completeTurn returning game:', results[0]);
+      return res.json({ game: results[0], turnCompleted: true });
     });
   });
 };
 
-module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord}
+// Check game status for polling (lightweight - just returns player_turn and word status)
+const checkGameStatus = (req, res) => {
+  const { game_id } = req.query;
+
+  const query = `SELECT player_turn, word FROM multiplayer_games WHERE id = ?`;
+
+  db.query(query, [game_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    return res.json({
+      player_turn: results[0].player_turn,
+      has_word: results[0].word !== null
+    });
+  });
+};
+
+module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord, completeTurn, checkGameStatus}

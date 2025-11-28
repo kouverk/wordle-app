@@ -161,6 +161,15 @@ export class GameService {
     return this.http.get<any>(`${this.apiUrl}/choose-word`);
   }
 
+  // Check game status for polling (lightweight)
+  checkGameStatus(game_id: number) {
+    const params = new HttpParams().set('game_id', game_id.toString());
+    return this.http.get<{ player_turn: number; has_word: boolean }>(
+      `${this.apiUrl}/check-game-status`,
+      { params }
+    );
+  }
+
   // Update the word for a multiplayer game (when challenger picks a word)
   updateGameWord(game_id: number, word: string) {
     return this.http.post<{ game: Game }>(`${this.apiUrl}/update-game-word`, { game_id, word })
@@ -202,5 +211,25 @@ export class GameService {
         },
       });
     }
+  }
+
+  // Complete the current turn in multiplayer - player picks a word for opponent
+  completeTurn(game_id: number, player_id: number, attempts_used: number) {
+    console.log('completeTurn called with:', { game_id, player_id, attempts_used });
+    return this.http.post<{ game: Game; turnCompleted: boolean }>(
+      `${this.apiUrl}/complete-turn`,
+      { game_id, player_id, attempts_used }
+    ).subscribe({
+      next: (response) => {
+        console.log('completeTurn response:', response);
+        this.updateGame(response.game);
+        this.updateAttempts(null); // Clear attempts for the new round
+        console.log('Navigating to /choose-word');
+        this.router.navigate(['/choose-word']); // Player picks a word for opponent
+      },
+      error: (error) => {
+        console.error('Failed to complete turn:', error);
+      }
+    });
   }
 }

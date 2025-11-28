@@ -188,27 +188,61 @@ export class GameComponent implements OnInit {
 
   animateWord(attemptedWord: string[], row: number): void {  // Accept row as parameter
     this.animationInProgress = true;
-    
+
     attemptedWord.forEach((letter, index) => {
       setTimeout(() => {
         this.flipLetter(index, letter, row); // Pass row to flipLetter
       }, index * this.newFlipDelay);
     });
-  
+
     setTimeout(() => {
       this.currentRow++;
       this.currentCol = 0;
       this.currentWord = attemptedWord.join('');
       this.animationInProgress = false;
-  
-      if (this.currentWord === this.solution) {
+
+      const isWin = this.currentWord === this.solution;
+      const isGameOver = this.currentRow >= 6;
+
+      if (isWin) {
         const currentRowElement = this.el.nativeElement.querySelector(`.row:nth-child(${row + 1})`);
         this.triggerWaveAnimation(currentRowElement);
         setTimeout(() => {
           this.showMessage('Great Job Pwincess 🤩', 4000);
+          // Complete turn for multiplayer after showing message
+          console.log('Win detected. Game type:', this.game?.game_type, 'multiplayer flag:', this.multiplayer);
+          if (this.game?.game_type === 'multiplayer') {
+            this.handleMultiplayerTurnComplete(row + 1); // attempts_used = row + 1
+          }
         }, this.waveDuration);
+      } else if (isGameOver) {
+        // Used all 6 attempts without winning
+        this.showMessage(`The word was ${this.solution} 😔`, 4000);
+        console.log('Game over. Game type:', this.game?.game_type, 'multiplayer flag:', this.multiplayer);
+        if (this.game?.game_type === 'multiplayer') {
+          this.handleMultiplayerTurnComplete(6);
+        }
       }
     }, attemptedWord.length * this.nextRowDelay);
+  }
+
+  // Handle completing a multiplayer turn
+  private handleMultiplayerTurnComplete(attemptsUsed: number): void {
+    console.log('handleMultiplayerTurnComplete called with attempts:', attemptsUsed);
+    console.log('Current game:', this.game);
+    console.log('Game type:', this.game?.game_type);
+
+    if (this.game && this.game.game_type === 'multiplayer') {
+      const multiplayerGame = this.game; // TypeScript now knows this is MultiplayerGame
+      console.log('Calling completeTurn in 2 seconds for game_id:', multiplayerGame.game_id);
+      // Delay before switching turns to let the user see the result
+      setTimeout(() => {
+        console.log('Executing completeTurn now');
+        this.gameservice.completeTurn(multiplayerGame.game_id, multiplayerGame.player_turn, attemptsUsed);
+      }, 2000);
+    } else {
+      console.log('Not a multiplayer game, skipping completeTurn');
+    }
   }
 
   flipLetter(index: number, letter: string, row: number): void {
