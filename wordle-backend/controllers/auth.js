@@ -81,24 +81,27 @@ const login = async (req, res) => {
     const { username, password } = req.body;
 
     // Step 1: Retrieve user data and determine game type (only in_progress games)
+    // The subquery combines both multiplayer and singleplayer games, orders by last_turn_time, and takes the most recent
     const userQuery = `
         SELECT u.id AS user_id, u.username, u.password, u.avatar_num, a.url AS avatar_url,
                g.game_id, g.game_type
         FROM users u
         LEFT JOIN avatars a ON u.avatar_num = a.id
         LEFT JOIN (
-            SELECT mpg.id AS game_id, 'multiplayer' AS game_type, mpg.last_turn_time AS last_turn_time
-            FROM multiplayer_games mpg
-            LEFT JOIN users u1 ON mpg.player1_id = u1.id
-            LEFT JOIN users u2 ON mpg.player2_id = u2.id
-            WHERE (u1.username = ? OR u2.username = ?) AND mpg.status = 'in_progress'
+            SELECT * FROM (
+                SELECT mpg.id AS game_id, 'multiplayer' AS game_type, mpg.last_turn_time AS last_turn_time
+                FROM multiplayer_games mpg
+                LEFT JOIN users u1 ON mpg.player1_id = u1.id
+                LEFT JOIN users u2 ON mpg.player2_id = u2.id
+                WHERE (u1.username = ? OR u2.username = ?) AND mpg.status = 'in_progress'
 
-            UNION ALL
+                UNION ALL
 
-            SELECT spg.id AS game_id, 'singleplayer' AS game_type, spg.last_turn_time AS last_turn_time
-            FROM single_player_games spg
-            LEFT JOIN users u ON spg.player_id = u.id
-            WHERE u.username = ? AND spg.status = 'in_progress'
+                SELECT spg.id AS game_id, 'singleplayer' AS game_type, spg.last_turn_time AS last_turn_time
+                FROM single_player_games spg
+                LEFT JOIN users u ON spg.player_id = u.id
+                WHERE u.username = ? AND spg.status = 'in_progress'
+            ) AS combined_games
             ORDER BY last_turn_time DESC
             LIMIT 1
         ) AS g ON u.username = ?

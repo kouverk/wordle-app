@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
@@ -14,7 +14,7 @@ import { GameService } from '../services/game.service';
   styleUrls: ['./login.component.css']
 })
 
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   form: FormGroup = new FormGroup({
     username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required])
@@ -23,6 +23,13 @@ export class LoginComponent {
   loginError: string | null = null; // Variable to hold error messages
 
   constructor(private authService: AuthService, private gameservice: GameService, private router: Router) {}
+
+  ngOnInit() {
+    // If user already has a valid token, redirect to game
+    if (this.authService.userIsLoggedIn()) {
+      this.router.navigate(['/game']);
+    }
+  }
 
   login() {
     if (this.form.valid) {
