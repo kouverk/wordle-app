@@ -1,6 +1,6 @@
-# Multiplayer Wordle
+# Multiplayer Wordle 👑
 
-A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just wordle.
+A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just wordle, pwincess 💕
 
 ## Why This Exists
 
@@ -18,12 +18,13 @@ Please consider joining the boycott of the NYT. Learn more at [boycottdivestunsu
 ## Features
 
 - **Multiplayer Games**: Challenge friends to head-to-head Wordle matches
-- **Single Player Mode**: Classic Wordle gameplay
+- **Single Player Mode**: Classic Wordle gameplay for when ur friends are busy bestie
 - **Word Frequency Scoring**: Rarer words are worth more points
-- **Attempt-Based Multipliers**: Fewer guesses = higher score bonus
-- **Custom Avatars**: Pick your player avatar
-- **Password Reset**: Forgot your password? No problem.
-- **Dark Mode**: Toggle between light and dark themes via the settings menu
+- **Attempt-Based Multipliers**: Fewer guesses = higher score bonus (slay queen slay 💅)
+- **Custom Avatars**: Pick your player avatar, cutie patootie 🎀
+- **Password Reset**: Forgot your password? No problem bb
+- **Dark Mode**: For those of us who aren't butterfly sunshine whores 🖤
+- **Affirmations**: Click the heart for a random affirmation because you deserve it 💕
 
 ## Project Structure
 
@@ -112,4 +113,4 @@ Word base scores range from 1-10 based on frequency (rarer = higher).
 
 ## License
 
-Do whatever you want with it. Just play Wordle.
+Do whatever you want with it. Just play Wordle, diva 💅

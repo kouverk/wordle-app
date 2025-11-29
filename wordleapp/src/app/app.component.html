@@ -41,10 +41,10 @@
       </button>
       <span class="game-label" *ngIf="gameLabel">{{ gameLabel }}</span>
       <span class="spacer"></span>
-      <button mat-icon-button class="heart" (click)="showAffirmation()">
+      <button mat-icon-button class="heart" (click)="showAffirmation()" *ngIf="isLoggedIn">
         <mat-icon>favorite</mat-icon>
       </button>
-      <button mat-icon-button class="settings" [matMenuTriggerFor]="settingsMenu">
+      <button mat-icon-button class="settings" [matMenuTriggerFor]="settingsMenu" *ngIf="isLoggedIn">
         <mat-icon>settings</mat-icon>
       </button>
       <mat-menu #settingsMenu="matMenu">
