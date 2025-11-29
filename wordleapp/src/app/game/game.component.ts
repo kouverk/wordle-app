@@ -32,7 +32,8 @@ export class GameComponent implements OnInit {
   messageIsVisible: boolean = false;
   message: string = '';
   isInitialLoad: boolean = true;
-  lastSubmittedRow: number = -1; // Track last row we submitted to prevent duplicates 
+  lastSubmittedRow: number = -1; // Track last row we submitted to prevent duplicates
+  turnCompletionInProgress: boolean = false; // Prevent multiple completeTurn calls
 
   constructor(private gameservice: GameService, private renderer: Renderer2, private el: ElementRef, private cdr: ChangeDetectorRef){}
 
@@ -105,6 +106,7 @@ export class GameComponent implements OnInit {
     this.lastSubmittedRow = -1;
     this.isInitialLoad = true;
     this.animationInProgress = false;
+    this.turnCompletionInProgress = false; // Reset for new game
 
     // Clear the DOM - remove classes from all cells and keyboard keys
     const cells = this.el.nativeElement.querySelectorAll('.cell');
@@ -320,20 +322,23 @@ export class GameComponent implements OnInit {
 
   // Handle completing a multiplayer turn
   private handleMultiplayerTurnComplete(attemptsUsed: number, won: boolean = false): void {
+    // Guard against multiple calls
+    if (this.turnCompletionInProgress) {
+      console.log('Turn completion already in progress, skipping');
+      return;
+    }
+
     console.log('handleMultiplayerTurnComplete called with attempts:', attemptsUsed, 'won:', won);
-    console.log('Current game:', this.game);
-    console.log('Game type:', this.game?.game_type);
 
     if (this.game && this.game.game_type === 'multiplayer') {
-      const multiplayerGame = this.game; // TypeScript now knows this is MultiplayerGame
+      this.turnCompletionInProgress = true;
+      const multiplayerGame = this.game;
       console.log('Calling completeTurn in 2 seconds for game_id:', multiplayerGame.game_id);
       // Delay before switching turns to let the user see the result
       setTimeout(() => {
         console.log('Executing completeTurn now');
         this.gameservice.completeTurn(multiplayerGame.game_id, multiplayerGame.player_turn, attemptsUsed, won);
       }, 2000);
-    } else {
-      console.log('Not a multiplayer game, skipping completeTurn');
     }
   }
 

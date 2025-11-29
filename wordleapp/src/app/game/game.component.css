@@ -196,8 +196,8 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    background-color: var(--color-text-primary);
-    color: var(--color-background);
+    background-color: var(--color-accent);
+    color: white;
     text-align: center;
     padding: 15px;
     font-size: 20px;

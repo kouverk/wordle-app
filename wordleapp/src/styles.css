@@ -27,8 +27,8 @@
   --color-toolbar-bg: #ffffff;
   --color-sidenav-bg: #fafafa;
 
-  /* Accent colors */
-  --color-accent: #6200ea;
+  /* Accent colors - the specific purple */
+  --color-accent: #8f1c94;
   --color-accent-light: #c0aff3;
 }
 
@@ -58,8 +58,8 @@ body.dark-mode {
   --color-toolbar-bg: #1a1a1b;
   --color-sidenav-bg: #1a1a1b;
 
-  /* Accent colors */
-  --color-accent: #bb86fc;
+  /* Accent colors - same purple for brand consistency */
+  --color-accent: #8f1c94;
   --color-accent-light: #4a3a6e;
 }
 

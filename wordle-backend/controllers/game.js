@@ -91,11 +91,11 @@ const retrieveMultiPlayerGame = (req, res) => {
       // Step 2: Retrieve attempts for the existing game (only current turn's attempts)
       const attemptsQuery = `
         SELECT * FROM multiplayer_game_attempts
-        WHERE game_id = ?
+        WHERE game_id = ? AND turn_num = ?
         ORDER BY created_at ASC
       `;
 
-      db.query(attemptsQuery, [game.game_id], (err, attemptsResults) => {
+      db.query(attemptsQuery, [game.game_id, game.current_turn_num], (err, attemptsResults) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
@@ -105,50 +105,41 @@ const retrieveMultiPlayerGame = (req, res) => {
           newGame: false
         });
       });
-    } else { 
-      // Step 3: Select a random word and create a new multiplayer game
-      const wordQuery = `SELECT word FROM words ORDER BY RAND() LIMIT 1`;
+    } else {
+      // No existing game - create a new multiplayer game with word = NULL
+      // The challenger will pick a word on the /choose-word page
+      const insertQuery = `
+        INSERT INTO multiplayer_games (player1_id, player2_id, word, current_turn_num, player_turn,
+                                       player1_score, player2_score, status, last_turn_time)
+        VALUES (?, ?, NULL, 0, ?, 0, 0, 'in_progress', NULL)
+      `;
 
-      db.query(wordQuery, (err, wordResults) => {
+      db.query(insertQuery, [player1_id, player2_id, player1_id], (err, insertResult) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
 
-        const randomWord = wordResults[0].word;
-
-        const insertQuery = `
-          INSERT INTO multiplayer_games (player1_id, player2_id, word, current_turn_num, player_turn, 
-                                         player1_score, player2_score, status, last_turn_time)
-          VALUES (?, ?, ?, 0, ?, 0, 0, 'in_progress', NULL)
+        // Retrieve the newly created game record
+        const newGameId = insertResult.insertId;
+        const newSelectQuery = `
+          SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+                 u1.username AS player1_username, u2.username AS player2_username, player_turn,
+                 current_turn_num, word, player1_score, player2_score, status, completed_at,
+                 mpg.last_turn_time
+          FROM multiplayer_games mpg
+          LEFT JOIN users u1 ON mpg.player1_id = u1.id
+          LEFT JOIN users u2 ON mpg.player2_id = u2.id
+          WHERE mpg.id = ?
         `;
 
-        db.query(insertQuery, [player1_id, player2_id, randomWord, player1_id], (err, insertResult) => {
+        db.query(newSelectQuery, [newGameId], (err, newResults) => {
           if (err) {
             return res.status(500).json({ error: err.message });
           }
-
-          // Step 4: Retrieve the newly created game record
-          const newGameId = insertResult.insertId;
-          const newSelectQuery = `
-            SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id, 
-                   u1.username AS player1_username, u2.username AS player2_username, player_turn, 
-                   current_turn_num, word, player1_score, player2_score, status, completed_at, 
-                   mpg.last_turn_time 
-            FROM multiplayer_games mpg 
-            LEFT JOIN users u1 ON mpg.player1_id = u1.id 
-            LEFT JOIN users u2 ON mpg.player2_id = u2.id 
-            WHERE mpg.id = ?
-          `;
-
-          db.query(newSelectQuery, [newGameId], (err, newResults) => {
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
-            return res.json({
-              game: newResults[0],
-              attempts: null, // Set to null for the newly created game as no attempts exist yet
-              newGame: true
-            });
+          return res.json({
+            game: newResults[0],
+            attempts: null,
+            newGame: true
           });
         });
       });
@@ -262,7 +253,7 @@ const chooseWord = (req, res) => {
 
 //Add attempts data
 const addAttempt = (req, res) => {
-  const { game_id, game_type, player_id, attempt, attempt_num, is_correct } = req.body;
+  const { game_id, game_type, player_id, attempt, attempt_num, is_correct, turn_num } = req.body;
 
   // Validate game_type to ensure only valid tables are used
   const validTables = {
@@ -275,12 +266,16 @@ const addAttempt = (req, res) => {
     return res.status(400).json({ error: 'Invalid game type' });
   }
 
-  // SQL query for inserting a new attempt
-  const attemptInsert = `
-    INSERT INTO ?? (game_id, player_id, attempt, attempt_num, is_correct, created_at) 
-    VALUES (?, ?, ?, ?, ?, NOW())
-  `;
-  const insertParams = [tableName, game_id, player_id, attempt, attempt_num, is_correct];
+  // SQL query for inserting a new attempt (multiplayer includes turn_num)
+  const attemptInsert = game_type === 'multiplayer'
+    ? `INSERT INTO ?? (game_id, player_id, attempt, attempt_num, is_correct, turn_num, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`
+    : `INSERT INTO ?? (game_id, player_id, attempt, attempt_num, is_correct, created_at)
+       VALUES (?, ?, ?, ?, ?, NOW())`;
+
+  const insertParams = game_type === 'multiplayer'
+    ? [tableName, game_id, player_id, attempt, attempt_num, is_correct, turn_num || 0]
+    : [tableName, game_id, player_id, attempt, attempt_num, is_correct];
 
   // Perform the insert query
   db.query(attemptInsert, insertParams, (err, attemptResults) => {
@@ -370,8 +365,7 @@ const updateGameWord = (req, res) => {
 // Also calculates and updates the player's score based on word difficulty and attempts
 const completeTurn = (req, res) => {
   const { game_id, player_id, attempts_used, won } = req.body;
-  console.log('completeTurn called:', { game_id, player_id, attempts_used, won });
-
+  
   // First, get the current game to find the word and determine which player scored
   const getGameQuery = `
     SELECT player1_id, player2_id, word
@@ -404,8 +398,6 @@ const completeTurn = (req, res) => {
         // Default to 5.0 if word not found (shouldn't happen)
         const wordBaseScore = wordResults.length > 0 ? parseFloat(wordResults[0].score) : 5.0;
         const pointsEarned = calculateFinalScore(wordBaseScore, attempts_used);
-
-        console.log('Score calculation:', { word: game.word, wordBaseScore, attempts_used, pointsEarned });
 
         // Update the game: increment score, clear word, increment turn, switch player_turn
         const scoreColumn = isPlayer1 ? 'player1_score' : 'player2_score';
@@ -449,22 +441,32 @@ const completeTurn = (req, res) => {
 
 // Helper function to return the updated game after completeTurn
 function returnUpdatedGame(game_id, pointsEarned, res) {
-  const selectQuery = `
-    SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
-           u1.username AS player1_username, u2.username AS player2_username, player_turn,
-           current_turn_num, word, player1_score, player2_score, status, completed_at,
-           mpg.last_turn_time
-    FROM multiplayer_games mpg
-    LEFT JOIN users u1 ON mpg.player1_id = u1.id
-    LEFT JOIN users u2 ON mpg.player2_id = u2.id
-    WHERE mpg.id = ?
-  `;
+  // Delete attempts for this game (turn is complete, no longer needed)
+  const deleteAttemptsQuery = `DELETE FROM multiplayer_game_attempts WHERE game_id = ?`;
 
-  db.query(selectQuery, [game_id], (err, results) => {
+  db.query(deleteAttemptsQuery, [game_id], (err) => {
     if (err) {
-      return res.status(500).json({ error: err.message });
+      console.error('Failed to delete attempts:', err);
+      // Continue anyway - not critical
     }
-    return res.json({ game: results[0], turnCompleted: true, pointsEarned });
+
+    const selectQuery = `
+      SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+             u1.username AS player1_username, u2.username AS player2_username, player_turn,
+             current_turn_num, word, player1_score, player2_score, status, completed_at,
+             mpg.last_turn_time
+      FROM multiplayer_games mpg
+      LEFT JOIN users u1 ON mpg.player1_id = u1.id
+      LEFT JOIN users u2 ON mpg.player2_id = u2.id
+      WHERE mpg.id = ?
+    `;
+
+    db.query(selectQuery, [game_id], (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      return res.json({ game: results[0], turnCompleted: true, pointsEarned });
+    });
   });
 }
 

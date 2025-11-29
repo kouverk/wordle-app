@@ -6,13 +6,16 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class ThemeService {
-  private isDarkModeSubject = new BehaviorSubject<boolean>(false);
+  private isDarkModeSubject = new BehaviorSubject<boolean>(true); // Default to dark mode
   public isDarkMode$ = this.isDarkModeSubject.asObservable();
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {
     if (isPlatformBrowser(this.platformId)) {
       const savedTheme = localStorage.getItem('darkMode');
-      if (savedTheme === 'true') {
+      // Default to dark mode unless explicitly set to light
+      if (savedTheme === 'false') {
+        this.disableDarkMode();
+      } else {
         this.enableDarkMode();
       }
     }

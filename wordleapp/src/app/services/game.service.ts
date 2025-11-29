@@ -143,14 +143,17 @@ export class GameService {
       .get<any>(`${this.apiUrl}/retrieve-multiplayer-game`, { params })
       .subscribe({
         next: (response) => {
-          const game = response.game;
-          this.updateGame(response.game);
-          this.updateAttempts(response.attempts);
           if (response.newGame) {
-            // New game - challenger picks a word for opponent
+            // New game created with word = NULL, store game so choose-word has the game_id
+            this.updateGame(response.game);
             this.router.navigate(['/choose-word']);
           } else {
-            // Existing game - check whose turn it is and if there's a word to guess
+            // Existing game - update state with game data
+            const game = response.game;
+            this.updateGame(game);
+            this.updateAttempts(response.attempts);
+
+            // Check whose turn it is and if there's a word to guess
             if (player1_id == game.player_turn) {
               // It's our turn - but do we have a word to guess or need to pick one?
               if (game.word) {
@@ -235,6 +238,7 @@ export class GameService {
         attempt: word,
         attempt_num: attempt_num,
         is_correct: is_correct,
+        turn_num: game.current_turn_num,
       };
       this.http.post<Attempts>(`${this.apiUrl}/add-attempt`, attempt).subscribe({
         next: (response) => {
@@ -250,7 +254,7 @@ export class GameService {
   // Complete the current turn in multiplayer - player picks a word for opponent
   // won: true if player guessed correctly, false if they failed
   completeTurn(game_id: number, player_id: number, attempts_used: number, won: boolean) {
-    console.log('completeTurn called with:', { game_id, player_id, attempts_used, won });
+
     return this.http.post<{ game: Game; turnCompleted: boolean; pointsEarned: number }>(
       `${this.apiUrl}/complete-turn`,
       { game_id, player_id, attempts_used, won }
