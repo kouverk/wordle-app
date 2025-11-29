@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 //Auth handlers
-const {signup, getAvatars, assignAvatar, login} = require('../controllers/auth.js')
+const {signup, getAvatars, assignAvatar, login, requestPasswordReset, resetPassword} = require('../controllers/auth.js')
 //Game handlers
 const {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord, completeTurn, checkGameStatus, completeSinglePlayerGame} = require('../controllers/game.js')
 
@@ -10,6 +10,8 @@ router.post('/signup', signup)
 router.get('/get-avatars', getAvatars)
 router.post('/assign-avatar', assignAvatar)
 router.post('/login', login)
+router.post('/request-password-reset', requestPasswordReset)
+router.post('/reset-password', resetPassword)
 
 //Game routes
 router.get('/get-solution', getSolution)

@@ -5,3 +5,7 @@ wordle-app.code-workspace
 .DS_STORE
 wordle-backend/.DS_STORE
 .nvmrc
+
+# Environment files
+.env
+*.env

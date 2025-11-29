@@ -1,9 +1,13 @@
+require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const express = require('express');
 const app = express();
 const db = require('../db'); // MySQL connection
-app.use(express.json()); 
+app.use(express.json());
+
+const JWT_SECRET = process.env.JWT_SECRET; 
 
 const signup = async (req, res) => {
     const { username, password } = req.body;
@@ -16,7 +20,7 @@ const signup = async (req, res) => {
                 return res.status(500).json({ error: err.message });
             }
             const user_id = result.insertId;
-            const token = jwt.sign({ id: user_id }, 'your_jwt_secret', { expiresIn: '7d' });
+            const token = jwt.sign({ id: user_id }, JWT_SECRET, { expiresIn: '7d' });
             // Return the token and userId
             res.json({ message: 'User registered successfully', token: token, user_id: user_id });
         }
@@ -147,7 +151,7 @@ const login = async (req, res) => {
             // (attempts from previous turns shouldn't be returned)
             if (!mostRecentGame || (userData.game_type === 'multiplayer' && !mostRecentGame.word)) {
                 const response = {
-                    token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' }),
+                    token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, JWT_SECRET, { expiresIn: '7d' }),
                     user: {
                         user_id: userData.user_id,
                         username: userData.username,
@@ -180,7 +184,7 @@ const login = async (req, res) => {
                 if (err) return res.status(500).json({ error: err.message });
 
                 const response = {
-                    token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, 'your_jwt_secret', { expiresIn: '7d' }),
+                    token: jwt.sign({ id: userData.user_id, avatar_num: userData.avatar_num }, JWT_SECRET, { expiresIn: '7d' }),
                     user: {
                         user_id: userData.user_id,
                         username: userData.username,
@@ -200,4 +204,100 @@ const login = async (req, res) => {
 
 
 
-module.exports = {signup, getAvatars, assignAvatar, login};
+// Request password reset - generates a token for the user
+const requestPasswordReset = (req, res) => {
+    const { username } = req.body;
+
+    if (!username) {
+        return res.status(400).json({ error: 'Username is required' });
+    }
+
+    // Check if user exists
+    db.query('SELECT id FROM users WHERE username = ?', [username], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userId = results[0].id;
+
+        // Generate a random reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+
+        // Token expires in 1 hour
+        const expiry = new Date(Date.now() + 3600000);
+
+        // Store the token in the database
+        db.query(
+            'UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?',
+            [resetToken, expiry, userId],
+            (err) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+
+                // In a production app, you'd send this token via email
+                // For now, we return it directly (dev mode)
+                res.json({
+                    message: 'Password reset token generated',
+                    reset_token: resetToken,
+                    expires_at: expiry
+                });
+            }
+        );
+    });
+};
+
+// Reset password using the token
+const resetPassword = async (req, res) => {
+    const { reset_token, new_password } = req.body;
+
+    if (!reset_token || !new_password) {
+        return res.status(400).json({ error: 'Reset token and new password are required' });
+    }
+
+    if (new_password.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    // Find user with this token and check expiry
+    db.query(
+        'SELECT id, username FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()',
+        [reset_token],
+        async (err, results) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+
+            if (results.length === 0) {
+                return res.status(400).json({ error: 'Invalid or expired reset token' });
+            }
+
+            const user = results[0];
+
+            // Hash the new password
+            const hashedPassword = await bcrypt.hash(new_password, 10);
+
+            // Update password and clear the reset token
+            db.query(
+                'UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?',
+                [hashedPassword, user.id],
+                (err) => {
+                    if (err) {
+                        return res.status(500).json({ error: err.message });
+                    }
+
+                    res.json({
+                        message: 'Password reset successful',
+                        username: user.username
+                    });
+                }
+            );
+        }
+    );
+};
+
+module.exports = {signup, getAvatars, assignAvatar, login, requestPasswordReset, resetPassword};

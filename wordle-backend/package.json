@@ -3,6 +3,7 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "db": "^6.0.3",
+    "dotenv": "^17.2.3",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",

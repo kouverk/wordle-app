@@ -67,6 +67,14 @@ export class AuthService {
   }
 
   getUsers(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/get-users`); 
+    return this.http.get(`${this.apiUrl}/get-users`);
+  }
+
+  requestPasswordReset(username: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/request-password-reset`, { username });
+  }
+
+  resetPassword(reset_token: string, new_password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, { reset_token, new_password });
   }
 }

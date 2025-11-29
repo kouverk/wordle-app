@@ -52,4 +52,9 @@ export class LoginComponent {
   navigateToSignup() {
     this.router.navigate(['/signup']);
   }
+
+  // Navigate to forgot password
+  navigateToForgotPassword() {
+    this.router.navigate(['/forgot-password']);
+  }
 }
