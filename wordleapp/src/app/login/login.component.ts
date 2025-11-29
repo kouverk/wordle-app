@@ -30,11 +30,11 @@ export class LoginComponent {
       this.authService.login(credentials).subscribe({
         next: (response: any) => {
           localStorage.setItem('token', response.token);
-          const userData = response.user
-          const mostRecentGame = response.game
-          const attempts = response.attempts
-          this.gameservice.uponLogin(userData, mostRecentGame, attempts);
-          this.router.navigate(['/game']);
+          const userData = response.user;
+          const mostRecentGame = response.game;
+          const attempts = response.attempts;
+          const route = this.gameservice.uponLogin(userData, mostRecentGame, attempts);
+          this.router.navigate([route]);
         }, 
         error: (error) => {
           console.error('Login failed', error);

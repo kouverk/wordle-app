@@ -39,6 +39,7 @@
       <button mat-icon-button class="hamburger" (click)="sidenav.toggle()">
         <mat-icon>menu</mat-icon>
       </button>
+      <span class="game-label" *ngIf="gameLabel">{{ gameLabel }}</span>
       <span class="spacer"></span>
       <button mat-icon-button class="heart">
         <mat-icon>favorite</mat-icon>

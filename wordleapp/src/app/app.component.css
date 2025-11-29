@@ -7,6 +7,13 @@ mat-toolbar {
     flex: 1 1 auto;
 }
 
+.game-label {
+    color: #888;
+    font-size: 14px;
+    font-weight: 400;
+    margin-left: 8px;
+}
+
 .sidenav-title{
     font-family: 'Franklin Gothic Medium', Arial, sans-serif;
 } 

@@ -39,11 +39,12 @@ export class GameService {
   }
 
   // On login, store game and attempts data to localStorage and BehaviorSubjects
+  // Returns the route to navigate to based on game state
   uponLogin(
     userData: User,
     mostRecentGame: Game | null,
     attempts: Attempts | null
-  ) {
+  ): string {
     if (userData) {
       localStorage.setItem('user_id', userData.user_id.toString());
       localStorage.setItem('username', userData.username);
@@ -54,12 +55,33 @@ export class GameService {
 
     if (!mostRecentGame) {
       this.clearGameData();
-      return;
+      return '/game'; // No game, go to game page (will show empty board for anonymous play)
     }
 
     this.multiplayer_game = mostRecentGame.game_type === 'multiplayer';
     this.updateGame(mostRecentGame);
-    this.updateAttempts(attempts)
+    this.updateAttempts(attempts);
+
+    // Determine correct route based on game state
+    if (mostRecentGame.game_type === 'multiplayer' && userData) {
+      const loggedInUserId = userData.user_id;
+      const isMyTurn = mostRecentGame.player_turn === loggedInUserId;
+
+      if (isMyTurn) {
+        // It's my turn - do I have a word to guess or need to pick one?
+        if (mostRecentGame.word) {
+          return '/game';
+        } else {
+          return '/choose-word';
+        }
+      } else {
+        // Not my turn - wait for opponent
+        return '/wait';
+      }
+    }
+
+    // Single player or default
+    return '/game';
   }
 
   // Save game and attempts data to localStorage and update BehaviorSubjects
@@ -111,6 +133,9 @@ export class GameService {
 
   // Retrieve multiplayer game data and update state
   retrieveMultiPlayerGame(player1_id: number, player2_id: number) {
+    // Clear any existing game data first to prevent stale data display
+    this.clearGameData();
+
     const params = new HttpParams()
       .set('player1_id', player1_id.toString()) //This is logged in player id
       .set('player2_id', player2_id.toString());
@@ -148,13 +173,16 @@ export class GameService {
 
   // Retrieve single-player game data and update state
   retrieveSinglePlayerGame(user_id: number) {
+    // Clear any existing game data first to prevent stale data display
+    this.clearGameData();
+
     const params = new HttpParams().set('player_id', user_id.toString());
     this.http
       .get<any>(`${this.apiUrl}/retrieve-singleplayer-game`, { params })
       .subscribe({
         next: (response) => {
           this.updateGame(response.game);
-          this.updateAttempts(response.attempts)
+          this.updateAttempts(response.attempts);
           this.router.navigate(['/game']);
         },
         error: () => {

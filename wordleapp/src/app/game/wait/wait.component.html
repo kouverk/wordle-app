@@ -1,9 +1,15 @@
-<div class="wait-container"> 
+<div class="wait-container">
     <div class="wait-title">
       <div class="star">✨</div>
       <div *ngIf="multiplayerGame">
-        Waiting for bitch-ass {{ opponent_username }}<br>
-        to finish the word {{ multiplayerGame.word }}.
+        <ng-container *ngIf="multiplayerGame.word; else waitingForWordChoice">
+          Waiting for bitch-ass {{ opponent_username }}<br>
+          to finish the word {{ multiplayerGame.word }}.
+        </ng-container>
+        <ng-template #waitingForWordChoice>
+          Waiting for bitch-ass {{ opponent_username }}<br>
+          to choose a word for you.
+        </ng-template>
       </div>
       <div class="star">✨</div>
     </div>

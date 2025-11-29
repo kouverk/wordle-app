@@ -7,7 +7,7 @@ import { SharedModule } from './modules/shared.module';
 import { MatSidenav } from '@angular/material/sidenav';
 import { GameService } from './services/game.service';
 import { MatExpansionPanel } from '@angular/material/expansion';
-import { User } from './services/interfaces';
+import { User, Game } from './services/interfaces';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +21,9 @@ export class AppComponent {
   opened: boolean = false;
   users: User[] = []; // List of users
   loggedin_id: number | null = null;
-  isLoggedIn: boolean = false; 
+  isLoggedIn: boolean = false;
+  currentGame: Game | null = null;
+  gameLabel: string = '';
   @ViewChild('sidenav') sidenav!: MatSidenav;
   @ViewChild('expansionPanel') expansionPanel!: MatExpansionPanel;
 
@@ -34,8 +36,8 @@ export class AppComponent {
   ngOnInit() {
     // Fetch users if the user is logged in
     this.authService.isLoggedIn$.subscribe(isLoggedIn => {
-      this.isLoggedIn = isLoggedIn
-      if (isLoggedIn) { 
+      this.isLoggedIn = isLoggedIn;
+      if (isLoggedIn) {
         const user_id = localStorage.getItem('user_id');
         if (user_id) {
           this.loggedin_id = parseInt(user_id, 10);
@@ -46,6 +48,30 @@ export class AppComponent {
         this.users = [];
       }
     });
+
+    // Subscribe to game changes for toolbar display
+    this.gameService.game$.subscribe(game => {
+      this.currentGame = game;
+      this.updateGameLabel();
+    });
+  }
+
+  private updateGameLabel() {
+    if (!this.currentGame) {
+      this.gameLabel = '';
+      return;
+    }
+
+    if (this.currentGame.game_type === 'singleplayer') {
+      this.gameLabel = 'Single Player';
+    } else if (this.currentGame.game_type === 'multiplayer') {
+      // Find opponent's username
+      const loggedInUsername = localStorage.getItem('username');
+      const opponentUsername = this.currentGame.player1_username === loggedInUsername
+        ? this.currentGame.player2_username
+        : this.currentGame.player1_username;
+      this.gameLabel = `Multiplayer vs ${opponentUsername}`;
+    }
   }
 
   private loadUsers() {
