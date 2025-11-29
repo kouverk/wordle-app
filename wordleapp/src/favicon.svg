@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#121213"/>
+  <!-- Row 1: BOYCOTT (7 letters, show first 5) -->
+  <rect x="1" y="1" width="5.5" height="5.5" fill="#538d4e" rx="0.5"/>
+  <rect x="7" y="1" width="5.5" height="5.5" fill="#b59f3b" rx="0.5"/>
+  <rect x="13" y="1" width="5.5" height="5.5" fill="#538d4e" rx="0.5"/>
+  <rect x="19" y="1" width="5.5" height="5.5" fill="#3a3a3c" rx="0.5"/>
+  <rect x="25" y="1" width="5.5" height="5.5" fill="#b59f3b" rx="0.5"/>
+  
+  <!-- Row 2: DIVEST (6 letters, show first 5) -->
+  <rect x="1" y="7" width="5.5" height="5.5" fill="#b59f3b" rx="0.5"/>
+  <rect x="7" y="7" width="5.5" height="5.5" fill="#538d4e" rx="0.5"/>
+  <rect x="13" y="7" width="5.5" height="5.5" fill="#3a3a3c" rx="0.5"/>
+  <rect x="19" y="7" width="5.5" height="5.5" fill="#538d4e" rx="0.5"/>
+  <rect x="25" y="7" width="5.5" height="5.5" fill="#b59f3b" rx="0.5"/>
+  
+  <!-- Row 3: BDS style -->
+  <rect x="1" y="13" width="5.5" height="5.5" fill="#538d4e" rx="0.5"/>
+  <rect x="7" y="13" width="5.5" height="5.5" fill="#538d4e" rx="0.5"/>
+  <rect x="13" y="13" width="5.5" height="5.5" fill="#538d4e" rx="0.5"/>
+  <rect x="19" y="13" width="5.5" height="5.5" fill="#3a3a3c" rx="0.5"/>
+  <rect x="25" y="13" width="5.5" height="5.5" fill="#3a3a3c" rx="0.5"/>
+  
+  <!-- Row 4: Empty/in progress -->
+  <rect x="1" y="19" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="7" y="19" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="13" y="19" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="19" y="19" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="25" y="19" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  
+  <!-- Row 5: Empty -->
+  <rect x="1" y="25" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="7" y="25" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="13" y="25" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="19" y="25" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+  <rect x="25" y="25" width="5.5" height="5.5" fill="none" stroke="#3a3a3c" stroke-width="0.5" rx="0.5"/>
+</svg>
