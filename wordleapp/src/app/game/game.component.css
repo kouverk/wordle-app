@@ -193,15 +193,17 @@
 /* Message Styling */
 .message {
     position: fixed;
-    top: 0;
+    top: 80px;
     left: 50%;
     transform: translateX(-50%);
     background-color: var(--color-accent);
     color: white;
     text-align: center;
-    padding: 15px;
-    font-size: 20px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 500;
     font-family: 'Franklin Gothic Medium', Arial, sans-serif;
-    z-index: 9999; /* Make sure it floats above everything */
-    border-radius: 5px;
+    z-index: 9999;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(143, 28, 148, 0.4);
 }

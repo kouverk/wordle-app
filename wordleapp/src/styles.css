@@ -111,3 +111,23 @@ body.dark-mode .mat-mdc-button,
 body.dark-mode .mat-mdc-outlined-button {
   color: var(--color-text-primary) !important;
 }
+
+/* ===== AFFIRMATION SNACKBAR ===== */
+.affirmation-snackbar {
+  --mdc-snackbar-container-color: #8f1c94 !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+}
+
+.affirmation-snackbar .mdc-snackbar__surface {
+  background-color: #8f1c94 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(143, 28, 148, 0.4) !important;
+}
+
+.affirmation-snackbar .mdc-snackbar__label {
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  text-align: center !important;
+  padding: 14px 24px !important;
+}

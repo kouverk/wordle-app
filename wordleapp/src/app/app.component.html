@@ -41,7 +41,7 @@
       </button>
       <span class="game-label" *ngIf="gameLabel">{{ gameLabel }}</span>
       <span class="spacer"></span>
-      <button mat-icon-button class="heart">
+      <button mat-icon-button class="heart" (click)="showAffirmation()">
         <mat-icon>favorite</mat-icon>
       </button>
       <button mat-icon-button class="settings" [matMenuTriggerFor]="settingsMenu">

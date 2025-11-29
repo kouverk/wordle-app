@@ -5,8 +5,10 @@ import { MaterialModule } from './modules/material.module';
 import { AuthService } from './services/auth.service';
 import { SharedModule } from './modules/shared.module';
 import { MatSidenav } from '@angular/material/sidenav';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { GameService } from './services/game.service';
 import { ThemeService } from './services/theme.service';
+import { AffirmationService } from './services/affirmation.service';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { User, Game } from './services/interfaces';
 
@@ -33,7 +35,9 @@ export class AppComponent {
     private authService: AuthService,
     private router: Router,
     private gameService: GameService,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private affirmationService: AffirmationService,
+    private snackBar: MatSnackBar
   ) {
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
@@ -134,5 +138,16 @@ export class AppComponent {
   // Toggle dark mode
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
+  }
+
+  // Show a random affirmation message
+  showAffirmation() {
+    const message = this.affirmationService.getRandomAffirmation();
+    this.snackBar.open(message, '', {
+      duration: 3500,
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+      panelClass: ['affirmation-snackbar']
+    });
   }
 }
