@@ -44,9 +44,15 @@
       <button mat-icon-button class="heart">
         <mat-icon>favorite</mat-icon>
       </button>
-      <button mat-icon-button class="settings">
+      <button mat-icon-button class="settings" [matMenuTriggerFor]="settingsMenu">
         <mat-icon>settings</mat-icon>
       </button>
+      <mat-menu #settingsMenu="matMenu">
+        <button mat-menu-item (click)="toggleDarkMode()">
+          <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+          <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+        </button>
+      </mat-menu>
     </mat-toolbar>
 
     <!-- Main content of the app -->

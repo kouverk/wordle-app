@@ -1,7 +1,7 @@
 .lds-grid {
     /* change color here */
-    color: #8f1c94
-  }
+    color: var(--color-accent);
+}
 .lds-grid,
 .lds-grid div {
   box-sizing: border-box;
@@ -87,13 +87,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px; /* Space between stars and text */
+    gap: 10px;
     font-size: 1.5em;
-    color: #4A4A4A;
+    color: var(--color-text-primary);
     margin-bottom: 20px;
     font-weight: bold;
     text-align: center;
-    
 }
 
 

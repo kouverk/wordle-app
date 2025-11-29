@@ -6,6 +6,7 @@ import { AuthService } from './services/auth.service';
 import { SharedModule } from './modules/shared.module';
 import { MatSidenav } from '@angular/material/sidenav';
 import { GameService } from './services/game.service';
+import { ThemeService } from './services/theme.service';
 import { MatExpansionPanel } from '@angular/material/expansion';
 import { User, Game } from './services/interfaces';
 
@@ -22,6 +23,7 @@ export class AppComponent {
   users: User[] = []; // List of users
   loggedin_id: number | null = null;
   isLoggedIn: boolean = false;
+  isDarkMode: boolean = false;
   currentGame: Game | null = null;
   gameLabel: string = '';
   @ViewChild('sidenav') sidenav!: MatSidenav;
@@ -30,8 +32,13 @@ export class AppComponent {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private gameService: GameService
-  ) {}
+    private gameService: GameService,
+    private themeService: ThemeService
+  ) {
+    this.themeService.isDarkMode$.subscribe(isDark => {
+      this.isDarkMode = isDark;
+    });
+  }
 
   ngOnInit() {
     // Fetch users if the user is logged in
@@ -122,5 +129,10 @@ export class AppComponent {
     if (this.expansionPanel) {
       this.expansionPanel.close();
     }
+  }
+
+  // Toggle dark mode
+  toggleDarkMode() {
+    this.themeService.toggleDarkMode();
   }
 }

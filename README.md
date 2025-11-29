@@ -23,6 +23,7 @@ Please consider joining the boycott of the NYT. Learn more at [boycottdivestunsu
 - **Attempt-Based Multipliers**: Fewer guesses = higher score bonus
 - **Custom Avatars**: Pick your player avatar
 - **Password Reset**: Forgot your password? No problem.
+- **Dark Mode**: Toggle between light and dark themes via the settings menu
 
 ## Project Structure
 

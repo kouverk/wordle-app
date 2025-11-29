@@ -9,19 +9,20 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatRippleModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
 
 const modules = [
   MatCardModule,
   MatInputModule,
-  MatButtonModule, 
-  MatIconModule, 
-  MatListModule, 
-  MatToolbarModule, 
-  MatSidenavModule, 
-  MatExpansionModule, 
-  MatRippleModule, 
-  MatDividerModule, 
-  MatExpansionModule
+  MatButtonModule,
+  MatIconModule,
+  MatListModule,
+  MatToolbarModule,
+  MatSidenavModule,
+  MatExpansionModule,
+  MatRippleModule,
+  MatDividerModule,
+  MatMenuModule
 ];
 
 @NgModule({

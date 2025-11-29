@@ -3,7 +3,7 @@
     max-width: 600px;
     margin: 20px auto;
     text-align: center;
-    /* background-color: rgb(246, 155, 246); */
+    background-color: var(--color-surface);
 }
 
 /* Board styling */
@@ -20,19 +20,20 @@
 
 /* Board cell styling */
 .cell {
-    width: 55px; 
-    height: 55px; 
+    width: 55px;
+    height: 55px;
     display: flex;
-    border: 2px solid #ccc; 
+    border: 2px solid var(--color-tile-border);
     justify-content: center;
     align-items: center;
     font-size: 2rem;
     font-weight: bold;
     font-family: 'Franklin Gothic Medium', Arial, sans-serif;
     margin: 2px;
-    background-color: transparent;  
-    box-shadow: none;  
-    transition: background-color 0.3s ease, transform 0.5s; /* Add smooth transition */
+    background-color: var(--color-tile-empty);
+    color: var(--color-text-primary);
+    box-shadow: none;
+    transition: background-color 0.3s ease, transform 0.5s, color 0.3s ease;
 }
 
 @keyframes flip {
@@ -55,17 +56,17 @@
 
 /* Background colors for letter states */
 .cell.correct {
-    background-color: rgba(106, 170, 100, 255); /* Green color */
+    background-color: var(--color-correct);
     color: white;
 }
 
 .cell.present {
-    background-color: rgba(202, 181, 88, 255); /* Yellow color */
+    background-color: var(--color-present);
     color: white;
 }
 
 .cell.absent {
-    background-color: rgba(120, 124, 126, 255); /* Grey color */
+    background-color: var(--color-absent);
     color: white;
 }
 
@@ -109,21 +110,22 @@
     width: 42px; /* Standard width for keys */
     height: 58px;
     border: none;
-    margin: 2px;  
+    margin: 2px;
     font-size: 1.4em;
     font-weight: bold;
     font-family: 'Franklin Gothic Medium', Arial, sans-serif;
-    background-color: #f0f0f0; /* Default key color */
+    background-color: var(--color-key-bg);
+    color: var(--color-key-text);
     justify-content: center;
     align-items: center;
-    border-radius: 5px;  
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .key:active,
 .special-key:active {
-    background-color: #ccc; /* Temporary darker color when clicked */
+    background-color: var(--color-hover);
 }
 
 /* Remove focus outline and default focus styling */
@@ -141,7 +143,7 @@
 /* Ensure active state doesn't apply focus styles */
 .key:focus:not(:active),
 .special-key:focus:not(:active) {
-    background-color: #f0f0f0; /* Keep original color when focus but not active */
+    background-color: var(--color-key-bg);
 }
 
 /* Special keys: Enter and Delete */
@@ -151,17 +153,17 @@
 }
 
 .key.correct {
-    background-color: rgba(106, 170, 100, 255); /* Green color */
+    background-color: var(--color-correct);
     color: white;
 }
 
 .key.present {
-    background-color: rgba(202, 181, 88, 255); /* Yellow color */
+    background-color: var(--color-present);
     color: white;
 }
 
 .key.absent {
-    background-color: rgba(120, 124, 126, 255); /* Grey color */
+    background-color: var(--color-absent);
     color: white;
 }
 /* WIGGLE ANIMATION */
@@ -194,14 +196,12 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    /* width: 100px; */
-    background-color: #2f3033;/* Green background */
-    color: white;
+    background-color: var(--color-text-primary);
+    color: var(--color-background);
     text-align: center;
     padding: 15px;
     font-size: 20px;
     font-family: 'Franklin Gothic Medium', Arial, sans-serif;
-    padding:15px;
     z-index: 9999; /* Make sure it floats above everything */
-    border-radius:5px;
-  }
+    border-radius: 5px;
+}
