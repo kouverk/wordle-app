@@ -55,7 +55,33 @@ export class AffirmationService {
     "Chaos reigns but so do you bestie 👑🔥",
     "Touch grass? You ARE the grass. The moment. Everything. 🌱✨",
     "Mercury retrograde can't even touch you 🪐💅",
+    "God is a fuck face asshole, but you're not 🪄🐭",
 
+    // Wayne's world
+    `Did you ever see The Twilight Zone where the guy signed a contract, 
+     and they cut out his tongue, and they put it in a jar, and it wouldn't die?
+     It just grew and pulsated and gave birth to baby tongues.
+     Pretty cool, huh? I gotta go. 👅🫙`,
+    "In France, you would be called La Renarde, and would be hunted, with only your cunning to protect you. 🏹🎯🦌",
+    "You're a babe. You're a robo-babe.🤖💅",
+    "If you were a president, you'd be Babe-raham Lincoln. 🎩🧔🏻‍♂️🇺🇸",   
+    `Did you ever find Bugs Bunny attractive when he'd put 
+     on a dress and play a girl bunny?
+     Neither did I. I was just asking.🐰👗`, 
+    "You're double live gonzo, intensity in ten cities, live at Budokan.⛩️🏯",
+    `Where did you learn English?
+     College, and the Police Academy movies.🎥👮`,
+    "你很漂亮 ('you look pretty', in Cantonese).🪭🇨🇳",
+    `Will you still love me when I'm in my carbohydrate, 
+     sequined jump-suit, young-girls-in-white-cotton-panties, 
+     waking-up-in-a-pool-of-your-own-vomit, bloated, purple, 
+     dead-on-a-toilet phase? 🍔🍟🥤🍩🍕 💎✨👗 😰😱 🩲👙 🤮🥴🍺 💀👻💜 🚽🪦`,
+    `Oh, actually, all champagne is French. It's named after the region. 
+     Otherwise, it's sparkling white wine. 
+     Americans, of course, don't recognize the convention, so it becomes that thing of calling all of their sparkling whites champagne, even though by definition they're not.🍾🥂`, 
+    "One, two, three, four five, six, seven, eight Schlemiel, schlimazel Hasen Pfeffer Incorporated!📺🥰",
+    "How exactly does the suck-cut work? Well, as you can see, it sucks as it cuts! 💇‍♂️✂️", 
+    
     // Pure Affirmations
     "You are enough. You've always been enough. 💕",
     "I'm so proud of you for being here 🥹",
@@ -64,8 +90,16 @@ export class AffirmationService {
     "You're doing better than you think diva 💪💕"
   ];
 
-  getRandomAffirmation(): string {
+  getRandomAffirmation(): { message: string; duration: number } {
     const index = Math.floor(Math.random() * this.affirmations.length);
-    return this.affirmations[index];
+    const message = this.affirmations[index];
+
+    // Base duration of 2.5s + ~50ms per character, capped between 2.5s and 10s
+    const baseDuration = 2500;
+    const perCharDuration = 50;
+    const calculatedDuration = baseDuration + (message.length * perCharDuration);
+    const duration = Math.min(Math.max(calculatedDuration, 2500), 10000);
+
+    return { message, duration };
   }
 }

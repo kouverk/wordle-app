@@ -142,9 +142,9 @@ export class AppComponent {
 
   // Show a random affirmation message
   showAffirmation() {
-    const message = this.affirmationService.getRandomAffirmation();
+    const { message, duration } = this.affirmationService.getRandomAffirmation();
     this.snackBar.open(message, '', {
-      duration: 3500,
+      duration,
       horizontalPosition: 'center',
       verticalPosition: 'top',
       panelClass: ['affirmation-snackbar']

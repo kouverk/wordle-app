@@ -122,6 +122,7 @@ body.dark-mode .mat-mdc-outlined-button {
   background-color: #8f1c94 !important;
   border-radius: 12px !important;
   box-shadow: 0 4px 20px rgba(143, 28, 148, 0.4) !important;
+  max-width: 400px !important;
 }
 
 .affirmation-snackbar .mdc-snackbar__label {
