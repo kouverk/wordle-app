@@ -70,10 +70,16 @@ html, body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
-  /* Prevent all scrolling and zooming */
+  /* Prevent all scrolling, zooming, and elastic bounce */
   overflow: hidden;
   position: fixed;
-  touch-action: manipulation;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -123,17 +129,6 @@ body.dark-mode .mat-mdc-input-element {
 body.dark-mode .mat-mdc-button,
 body.dark-mode .mat-mdc-outlined-button {
   color: var(--color-text-primary) !important;
-}
-
-/* Purple icons in dark mode for toolbar */
-body.dark-mode mat-toolbar .mat-icon,
-body.dark-mode mat-toolbar mat-icon {
-  color: var(--color-accent) !important;
-}
-
-/* Purple text for choose-word title in dark mode */
-body.dark-mode .words-title-text {
-  color: var(--color-accent) !important;
 }
 
 /* ===== AFFIRMATION SNACKBAR ===== */
