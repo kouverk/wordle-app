@@ -1,6 +1,6 @@
 # Wordle Bitch
 
-A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just pure word-guessing fun.
+A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just wordle.
 
 ## Why This Exists
 
