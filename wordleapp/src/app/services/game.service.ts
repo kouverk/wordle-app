@@ -248,14 +248,18 @@ export class GameService {
   }
 
   // Complete the current turn in multiplayer - player picks a word for opponent
-  completeTurn(game_id: number, player_id: number, attempts_used: number) {
-    console.log('completeTurn called with:', { game_id, player_id, attempts_used });
-    return this.http.post<{ game: Game; turnCompleted: boolean }>(
+  // won: true if player guessed correctly, false if they failed
+  completeTurn(game_id: number, player_id: number, attempts_used: number, won: boolean) {
+    console.log('completeTurn called with:', { game_id, player_id, attempts_used, won });
+    return this.http.post<{ game: Game; turnCompleted: boolean; pointsEarned: number }>(
       `${this.apiUrl}/complete-turn`,
-      { game_id, player_id, attempts_used }
+      { game_id, player_id, attempts_used, won }
     ).subscribe({
       next: (response) => {
         console.log('completeTurn response:', response);
+        if (response.pointsEarned > 0) {
+          console.log(`Earned ${response.pointsEarned} points!`);
+        }
         this.updateGame(response.game);
         this.updateAttempts(null); // Clear attempts for the new round
         console.log('Navigating to /choose-word');

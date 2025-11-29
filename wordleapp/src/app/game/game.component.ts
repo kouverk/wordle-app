@@ -143,10 +143,11 @@ export class GameComponent implements OnInit {
 
         if (isGameComplete) {
             console.log('Detected completed game on load, triggering completion handler');
+            const won = lastAttempt?.is_correct || false;
             if (this.game?.game_type === 'singleplayer') {
-                this.handleSinglePlayerGameComplete(lastAttempt?.is_correct || false);
+                this.handleSinglePlayerGameComplete(won);
             } else if (this.game?.game_type === 'multiplayer') {
-                this.handleMultiplayerTurnComplete(this.attempts.length);
+                this.handleMultiplayerTurnComplete(this.attempts.length, won);
             }
             return; // Don't load stale data into board
         }
@@ -299,7 +300,7 @@ export class GameComponent implements OnInit {
           // Complete turn for multiplayer after showing message
           console.log('Win detected. Game type:', this.game?.game_type, 'multiplayer flag:', this.multiplayer);
           if (this.game?.game_type === 'multiplayer') {
-            this.handleMultiplayerTurnComplete(row + 1); // attempts_used = row + 1
+            this.handleMultiplayerTurnComplete(row + 1, true); // attempts_used = row + 1, won = true
           } else if (this.game?.game_type === 'singleplayer') {
             this.handleSinglePlayerGameComplete(true);
           }
@@ -309,7 +310,7 @@ export class GameComponent implements OnInit {
         this.showMessage(`The word was ${this.solution} 😔`, 4000);
         console.log('Game over. Game type:', this.game?.game_type, 'multiplayer flag:', this.multiplayer);
         if (this.game?.game_type === 'multiplayer') {
-          this.handleMultiplayerTurnComplete(6);
+          this.handleMultiplayerTurnComplete(6, false); // 6 attempts, won = false
         } else if (this.game?.game_type === 'singleplayer') {
           this.handleSinglePlayerGameComplete(false);
         }
@@ -318,8 +319,8 @@ export class GameComponent implements OnInit {
   }
 
   // Handle completing a multiplayer turn
-  private handleMultiplayerTurnComplete(attemptsUsed: number): void {
-    console.log('handleMultiplayerTurnComplete called with attempts:', attemptsUsed);
+  private handleMultiplayerTurnComplete(attemptsUsed: number, won: boolean = false): void {
+    console.log('handleMultiplayerTurnComplete called with attempts:', attemptsUsed, 'won:', won);
     console.log('Current game:', this.game);
     console.log('Game type:', this.game?.game_type);
 
@@ -329,7 +330,7 @@ export class GameComponent implements OnInit {
       // Delay before switching turns to let the user see the result
       setTimeout(() => {
         console.log('Executing completeTurn now');
-        this.gameservice.completeTurn(multiplayerGame.game_id, multiplayerGame.player_turn, attemptsUsed);
+        this.gameservice.completeTurn(multiplayerGame.game_id, multiplayerGame.player_turn, attemptsUsed, won);
       }, 2000);
     } else {
       console.log('Not a multiplayer game, skipping completeTurn');

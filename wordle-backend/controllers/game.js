@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const db = require('../db'); // MySQL connection
+const { calculateFinalScore } = require('../utils/scoring');
 app.use(express.json()); 
 
 // Route to get a solution word
@@ -366,48 +367,106 @@ const updateGameWord = (req, res) => {
 };
 
 // Complete current turn - player who finished will now pick a word for opponent
+// Also calculates and updates the player's score based on word difficulty and attempts
 const completeTurn = (req, res) => {
-  const { game_id, player_id, attempts_used } = req.body;
-  console.log('completeTurn called:', { game_id, player_id, attempts_used });
+  const { game_id, player_id, attempts_used, won } = req.body;
+  console.log('completeTurn called:', { game_id, player_id, attempts_used, won });
 
-  // The player who just finished (player_id) now gets to pick a word for their opponent
-  // So player_turn stays with them until they pick a word via updateGameWord
-  // We increment turn number and clear the word (NULL = waiting for word selection)
-
-  const updateQuery = `
-    UPDATE multiplayer_games
-    SET player_turn = ?,
-        word = NULL,
-        current_turn_num = current_turn_num + 1,
-        last_turn_time = NOW()
+  // First, get the current game to find the word and determine which player scored
+  const getGameQuery = `
+    SELECT player1_id, player2_id, word
+    FROM multiplayer_games
     WHERE id = ?
   `;
 
-  db.query(updateQuery, [player_id, game_id], (err) => {
+  db.query(getGameQuery, [game_id], (err, gameResults) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
 
-    // Return the updated game
-    const selectQuery = `
-      SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
-             u1.username AS player1_username, u2.username AS player2_username, player_turn,
-             current_turn_num, word, player1_score, player2_score, status, completed_at,
-             mpg.last_turn_time
-      FROM multiplayer_games mpg
-      LEFT JOIN users u1 ON mpg.player1_id = u1.id
-      LEFT JOIN users u2 ON mpg.player2_id = u2.id
-      WHERE mpg.id = ?
-    `;
+    if (gameResults.length === 0) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
 
-    db.query(selectQuery, [game_id], (err, results) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      return res.json({ game: results[0], turnCompleted: true });
-    });
+    const game = gameResults[0];
+    const isPlayer1 = player_id === game.player1_id;
+
+    // If the player won, calculate their score based on word difficulty and attempts
+    if (won && attempts_used > 0) {
+      // Get the word's base score from the words table
+      const getWordScoreQuery = `SELECT score FROM words WHERE word = ?`;
+
+      db.query(getWordScoreQuery, [game.word], (err, wordResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        // Default to 5.0 if word not found (shouldn't happen)
+        const wordBaseScore = wordResults.length > 0 ? parseFloat(wordResults[0].score) : 5.0;
+        const pointsEarned = calculateFinalScore(wordBaseScore, attempts_used);
+
+        console.log('Score calculation:', { word: game.word, wordBaseScore, attempts_used, pointsEarned });
+
+        // Update the game: increment score, clear word, increment turn, switch player_turn
+        const scoreColumn = isPlayer1 ? 'player1_score' : 'player2_score';
+        const updateQuery = `
+          UPDATE multiplayer_games
+          SET player_turn = ?,
+              word = NULL,
+              current_turn_num = current_turn_num + 1,
+              ${scoreColumn} = ${scoreColumn} + ?,
+              last_turn_time = NOW()
+          WHERE id = ?
+        `;
+
+        db.query(updateQuery, [player_id, pointsEarned, game_id], (err) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+          returnUpdatedGame(game_id, pointsEarned, res);
+        });
+      });
+    } else {
+      // Player lost (didn't guess the word) - no points, just advance the turn
+      const updateQuery = `
+        UPDATE multiplayer_games
+        SET player_turn = ?,
+            word = NULL,
+            current_turn_num = current_turn_num + 1,
+            last_turn_time = NOW()
+        WHERE id = ?
+      `;
+
+      db.query(updateQuery, [player_id, game_id], (err) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        returnUpdatedGame(game_id, 0, res);
+      });
+    }
   });
 };
+
+// Helper function to return the updated game after completeTurn
+function returnUpdatedGame(game_id, pointsEarned, res) {
+  const selectQuery = `
+    SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+           u1.username AS player1_username, u2.username AS player2_username, player_turn,
+           current_turn_num, word, player1_score, player2_score, status, completed_at,
+           mpg.last_turn_time
+    FROM multiplayer_games mpg
+    LEFT JOIN users u1 ON mpg.player1_id = u1.id
+    LEFT JOIN users u2 ON mpg.player2_id = u2.id
+    WHERE mpg.id = ?
+  `;
+
+  db.query(selectQuery, [game_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    return res.json({ game: results[0], turnCompleted: true, pointsEarned });
+  });
+}
 
 // Check game status for polling (lightweight - just returns player_turn and word status)
 const checkGameStatus = (req, res) => {
