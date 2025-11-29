@@ -1,4 +1,4 @@
-# Wordle Bitch
+# Multiplayer Wordle
 
 A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just wordle.
 
