@@ -2,6 +2,10 @@
 
 A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just wordle, pwincess 💕
 
+## Live Demo
+
+Play it now: [wordle-app-vert.vercel.app](https://wordle-app-vert.vercel.app)
+
 ## Why This Exists
 
 I refuse to support the New York Times due to their complicity in the genocide in Gaza. I also love Wordle. So I built my own.
