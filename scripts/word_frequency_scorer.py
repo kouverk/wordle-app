@@ -15,7 +15,7 @@ Scoring logic:
 - Max score capped at 10
 
 Usage:
-    pip install -r requirements.txt
+    pip install python-dotenv mysql-connector-python requests
     python word_frequency_scorer.py
 """
 
@@ -27,14 +27,17 @@ import zipfile
 import requests
 import mysql.connector
 from pathlib import Path
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv(Path(__file__).parent / '.env')
 
-# Database configuration (matches your db/index.js)
+# Database configuration from environment
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'Befef$#$1',
-    'database': 'wordleapp'
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', 'wordleapp')
 }
 
 # Kaggle dataset info

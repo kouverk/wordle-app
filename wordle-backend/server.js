@@ -1,10 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const mysql = require('mysql2');
 const cors = require('cors');
 const routes = require('./routes/index');
 const app = express();
-const port = 3000; // Change if necessary
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());

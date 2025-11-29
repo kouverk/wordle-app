@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "ng build --configuration=production",
+  "outputDirectory": "dist/wordleapp/browser",
+  "framework": "angular",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

@@ -4,12 +4,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { Game, User, Attempts, MultiplayerGame, Attempt } from './interfaces';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameService {
-  private apiUrl = 'http://localhost:3000';
+  private apiUrl = environment.apiUrl;
   public loggedIn: boolean = false;
   public multiplayer_game: boolean = false;
   private gameSubject = new BehaviorSubject<Game | null>(null);

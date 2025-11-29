@@ -3,13 +3,14 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class AuthService {
-  private apiUrl = 'http://localhost:3000'; // Your backend URL
+  private apiUrl = environment.apiUrl;
   public loggedIn: boolean = false; 
   private jwtHelper: JwtHelperService; 
   private isLoggedInSubject = new BehaviorSubject<boolean>(false);

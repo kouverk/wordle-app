@@ -1,6 +1,7 @@
 wordleapp/node_modules/
 wordle-backend/node_modules/
 wordleapp/notes/
+wordleapp/dist/
 wordle-app.code-workspace
 .DS_STORE
 wordle-backend/.DS_STORE
@@ -9,3 +10,9 @@ wordle-backend/.DS_STORE
 # Environment files
 .env
 *.env
+wordle-backend/.env
+scripts/.env
+
+# Database dumps (may contain sensitive data)
+scripts/wordleapp_dump.sql
+scripts/wordleapp_dump_clean.sql

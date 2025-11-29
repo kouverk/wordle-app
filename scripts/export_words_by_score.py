@@ -3,19 +3,25 @@
 Export words table ordered by score (descending) to CSV.
 
 Usage:
+    pip install python-dotenv mysql-connector-python
     python export_words_by_score.py
 """
 
+import os
 import csv
 import mysql.connector
 from pathlib import Path
+from dotenv import load_dotenv
 
-# Database configuration
+# Load environment variables from .env file
+load_dotenv(Path(__file__).parent / '.env')
+
+# Database configuration from environment
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'Befef$#$1',
-    'database': 'wordleapp'
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', 'wordleapp')
 }
 
 OUTPUT_FILE = Path(__file__).parent / "words_by_score.csv"
