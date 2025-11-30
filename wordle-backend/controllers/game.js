@@ -4,11 +4,24 @@ const db = require('../db'); // MySQL connection
 const { calculateFinalScore } = require('../utils/scoring');
 app.use(express.json()); 
 
-// Route to get a solution word
+// Route to get a solution word (requires player_id for single player filtering)
 const getSolution = (req, res) => {
-    const query = 'SELECT word FROM words ORDER BY RAND() LIMIT 1';
-  
-    db.query(query, (error, results) => {
+    const { player_id } = req.query;
+
+    // For single player: frequency >= 20 AND not played in last 365 days
+    const query = `
+      SELECT word FROM words
+      WHERE frequency >= 20
+      AND word NOT IN (
+        SELECT word FROM single_player_games
+        WHERE player_id = ?
+        AND completed_at > DATE_SUB(NOW(), INTERVAL 365 DAY)
+      )
+      ORDER BY RAND()
+      LIMIT 1
+    `;
+
+    db.query(query, [player_id], (error, results) => {
       if (error) {
         console.error('Get Solution query failed:', error);  // Log the error
         return res.status(500).json({ error: 'Get Solution query failed' });
@@ -190,10 +203,20 @@ const retrieveSinglePlayerGame = (req, res) => {
         });
       });
     } else {
-      // Step 3: Select a random word and create a new game record
-      const wordQuery = `SELECT word FROM words ORDER BY RAND() LIMIT 1`;
+      // Step 3: Select a random word (frequency >= 20, not played in last 365 days)
+      const wordQuery = `
+        SELECT word FROM words
+        WHERE frequency >= 20
+        AND word NOT IN (
+          SELECT word FROM single_player_games
+          WHERE player_id = ?
+          AND completed_at > DATE_SUB(NOW(), INTERVAL 365 DAY)
+        )
+        ORDER BY RAND()
+        LIMIT 1
+      `;
 
-      db.query(wordQuery, (err, wordResults) => {
+      db.query(wordQuery, [player_id], (err, wordResults) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
@@ -238,17 +261,19 @@ const retrieveSinglePlayerGame = (req, res) => {
 };
 
 const chooseWord = (req, res) => {
-  db.query('SELECT word FROM words ORDER BY RAND() LIMIT 12', (err, results) => {
+  // Multiplayer: only filter by frequency >= 20 (no 365-day exclusion)
+  const query = `SELECT word FROM words WHERE frequency >= 20 ORDER BY RAND() LIMIT 12`;
+
+  db.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
     if (results.length > 0) {
       res.json(results);
     } else {
-      res.status(404).json({ error: 'Error in databse. No words found' });
+      res.status(404).json({ error: 'Error in database. No words found' });
     }
-    
-  })
+  });
 }
 
 //Add attempts data
