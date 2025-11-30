@@ -79,7 +79,7 @@ html, body {
   bottom: 0;
   touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: auto;
-  overscroll-behavior: none;
+  overscroll-behavior: none !important; 
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -93,6 +93,30 @@ body {
 /* Prevent double-tap zoom on all interactive elements */
 button, a, input, [role="button"], .mat-icon, mat-icon {
   touch-action: manipulation;
+}
+
+/* Prevent elastic bounce on all scrollable containers */
+*,
+*::before,
+*::after {
+  overscroll-behavior: none !important;
+}
+
+/* Lock down Angular Material sidenav content */
+.mat-sidenav-content,
+.mat-drawer-content,
+mat-sidenav-content {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+
+/* Lock down the main content area */
+.content,
+.sidenav-container,
+mat-sidenav-container {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
 }
 
 /* Material overrides for dark mode */
