@@ -1,3 +1,6 @@
+USE wordleapp; 
+select 'a'; 
+
 -- Create NYT words table for comparison
 DROP TABLE IF EXISTS `nyt_words`;
 

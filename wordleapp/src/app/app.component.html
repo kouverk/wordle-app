@@ -1,5 +1,5 @@
 <mat-sidenav-container class="sidenav-container">
-  <!-- Sidenav -->
+  <!-- Main Sidenav (left) -->
   <mat-sidenav #sidenav mode="over" [(opened)]="opened" (closedStart)="closeExpansionPanel()" class="sidenav" (click)="!isLoggedIn ? closeSidenav() : ''">
     <mat-nav-list>
       <!-- Multi-Player Expansion Panel with reference variable -->
@@ -32,6 +32,44 @@
     </div>
   </mat-sidenav>
 
+  <!-- Info Sidenav (right) - Boycott NYT info panel -->
+  <mat-sidenav #infoSidenav mode="over" position="end" class="info-sidenav">
+    <div class="info-panel">
+      <button mat-icon-button class="close-info" (click)="infoSidenav.close()">
+        <mat-icon>arrow_forward_ios</mat-icon>
+      </button>
+
+      <div class="info-content">
+        <h2>Why This App Exists</h2>
+
+        <p class="intro">
+          This app is part of the boycott of The New York Times, offering an alternative for those who want to play Wordle without supporting its Crimes.
+        </p>
+
+        <div class="quote-block">
+          <p>"Language makes genocide justifiable. A reason why we are still being bombed after 243 days is because of The New York Times and most Western media"</p>
+          <span class="attribution">— Hossam Shabat, Palestinian journalist</span>
+        </div>
+
+        <p>
+          American news media has been critical to maintaining Israel's death machine in gaza. And there is no American media institution more influential than The New York Times.
+        </p>
+        <p>
+          The new york times has routinely collaborated with Israel, printed outright lies from Israeli officials, it has directed reporters to avoid terms like "slaughter" and "ethnic cleansing", and systematically evades the culpability of Israel. 
+        </p>
+<!--         
+        <div class="quote-block">
+          <p>"The failure was not individual, but institutional."</p>
+          <span class="attribution">— NYT's own accounting of Iraq coverage</span>
+        </div> -->
+
+        <a href="https://www.boycottdivestunsubscribe.com/" target="_blank" rel="noopener" class="learn-more">
+          Learn More at BoycottDivestUnsubscribe.com
+        </a>
+      </div>
+    </div>
+  </mat-sidenav>
+
   <!-- Main Content -->
   <mat-sidenav-content>
     <!-- Toolbar -->
@@ -53,6 +91,9 @@
           <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
         </button>
       </mat-menu>
+      <button mat-icon-button class="solidarity" (click)="infoSidenav.toggle()">
+        <mat-icon>campaign</mat-icon>
+      </button>
     </mat-toolbar>
 
     <!-- Main content of the app -->
