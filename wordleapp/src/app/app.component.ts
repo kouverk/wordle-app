@@ -84,12 +84,7 @@ export class AppComponent {
       this.gameLabel = 'single player';
       this.isMultiplayer = false;
     } else if (this.currentGame.game_type === 'multiplayer') {
-      // Find opponent's username
-      const loggedInUsername = localStorage.getItem('username');
-      const opponentUsername = this.currentGame.player1_username === loggedInUsername
-        ? this.currentGame.player2_username
-        : this.currentGame.player1_username;
-      this.gameLabel = `multi-player vs ${opponentUsername}`;
+      this.gameLabel = 'multi-player';
 
       // Set up score display
       this.isMultiplayer = true;
