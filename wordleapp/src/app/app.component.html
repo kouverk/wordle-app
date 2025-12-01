@@ -35,7 +35,7 @@
   <!-- Info Sidenav (right) - Boycott NYT info panel -->
   <mat-sidenav #infoSidenav mode="over" position="end" class="info-sidenav">
     <div class="info-panel">
-      <button mat-icon-button class="close-info" (click)="infoSidenav.close()">
+      <button mat-icon-button class="close-info" (click)="infoSidenav.close()" (touchend)="infoSidenav.close()">
         <mat-icon>arrow_forward_ios</mat-icon>
       </button>
 

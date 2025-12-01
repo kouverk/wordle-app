@@ -141,6 +141,13 @@ mat-toolbar {
   top: 10px;
   left: 10px;
   color: var(--color-text-secondary);
+  /* iOS touch fixes */
+  min-width: 44px;
+  min-height: 44px;
+  z-index: 100;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .info-content {
