@@ -26,7 +26,7 @@
       </div>
     </mat-nav-list>
 
-    <div class="logout-button" (click)="logout()">
+    <div class="logout-button" [ngClass]="{'disabled': !isLoggedIn}" (click)="isLoggedIn ? logout() : null">
       <span>Logout</span>
       <mat-icon>logout</mat-icon>
     </div>
