@@ -65,21 +65,22 @@ const getUsers = (req, res) => {
   });
 };
 
-//load multiplayer game
+//load multiplayer game (each row = one turn between two players)
 const retrieveMultiPlayerGame = (req, res) => {
   const { player1_id, player2_id } = req.query;
 
-  // Step 1: Try to retrieve an existing multiplayer game
+  // Step 1: Try to retrieve an existing in_progress turn for this pair
   const selectQuery = `
-    SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id, 
-           u1.username AS player1_username, u2.username AS player2_username, player_turn, 
-           current_turn_num, word, player1_score, player2_score, status, completed_at, 
-           mpg.last_turn_time 
-    FROM multiplayer_games mpg 
-    LEFT JOIN users u1 ON mpg.player1_id = u1.id 
-    LEFT JOIN users u2 ON mpg.player2_id = u2.id 
-    WHERE (u1.id = ? AND u2.id = ?) OR (u1.id = ? AND u2.id = ?)
-    ORDER BY last_turn_time DESC
+    SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+           u1.username AS player1_username, u2.username AS player2_username, player_turn,
+           current_turn_num, word, player1_score, player2_score, status, completed_at,
+           mpg.last_turn_time
+    FROM multiplayer_games mpg
+    LEFT JOIN users u1 ON mpg.player1_id = u1.id
+    LEFT JOIN users u2 ON mpg.player2_id = u2.id
+    WHERE ((mpg.player1_id = ? AND mpg.player2_id = ?) OR (mpg.player1_id = ? AND mpg.player2_id = ?))
+      AND mpg.status = 'in_progress'
+    ORDER BY mpg.id DESC
     LIMIT 1
   `;
 
@@ -92,7 +93,6 @@ const retrieveMultiPlayerGame = (req, res) => {
       const game = results[0];
 
       // If word is null, the current turn hasn't started yet (player needs to choose a word)
-      // Don't return attempts from previous turns
       if (!game.word) {
         return res.json({
           game: game,
@@ -101,14 +101,14 @@ const retrieveMultiPlayerGame = (req, res) => {
         });
       }
 
-      // Step 2: Retrieve attempts for the existing game (only current turn's attempts)
+      // Step 2: Retrieve attempts for this turn
       const attemptsQuery = `
         SELECT * FROM multiplayer_game_attempts
-        WHERE game_id = ? AND turn_num = ?
+        WHERE game_id = ?
         ORDER BY created_at ASC
       `;
 
-      db.query(attemptsQuery, [game.game_id, game.current_turn_num], (err, attemptsResults) => {
+      db.query(attemptsQuery, [game.game_id], (err, attemptsResults) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
@@ -119,40 +119,75 @@ const retrieveMultiPlayerGame = (req, res) => {
         });
       });
     } else {
-      // No existing game - create a new multiplayer game with word = NULL
-      // The challenger will pick a word on the /choose-word page
-      const insertQuery = `
-        INSERT INTO multiplayer_games (player1_id, player2_id, word, current_turn_num, player_turn,
-                                       player1_score, player2_score, status, last_turn_time)
-        VALUES (?, ?, NULL, 0, ?, 0, 0, 'in_progress', NULL)
+      // No in_progress turn - create a new one
+      // First, get the previous turn's scores and turn number for this pair
+      const getPreviousQuery = `
+        SELECT player1_id, player2_id, player1_score, player2_score, current_turn_num
+        FROM multiplayer_games
+        WHERE ((player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?))
+          AND status = 'completed'
+        ORDER BY id DESC
+        LIMIT 1
       `;
 
-      db.query(insertQuery, [player1_id, player2_id, player1_id], (err, insertResult) => {
+      db.query(getPreviousQuery, [player1_id, player2_id, player2_id, player1_id], (err, prevResults) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
 
-        // Retrieve the newly created game record
-        const newGameId = insertResult.insertId;
-        const newSelectQuery = `
-          SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
-                 u1.username AS player1_username, u2.username AS player2_username, player_turn,
-                 current_turn_num, word, player1_score, player2_score, status, completed_at,
-                 mpg.last_turn_time
-          FROM multiplayer_games mpg
-          LEFT JOIN users u1 ON mpg.player1_id = u1.id
-          LEFT JOIN users u2 ON mpg.player2_id = u2.id
-          WHERE mpg.id = ?
+        // Determine scores and turn number to carry forward
+        let prevPlayer1Score = 0;
+        let prevPlayer2Score = 0;
+        let nextTurnNum = 0;
+
+        // Also need to maintain consistent player1/player2 ordering
+        let consistentPlayer1Id = parseInt(player1_id);
+        let consistentPlayer2Id = parseInt(player2_id);
+
+        if (prevResults.length > 0) {
+          const prev = prevResults[0];
+          // Use the same player ordering as previous turns
+          consistentPlayer1Id = prev.player1_id;
+          consistentPlayer2Id = prev.player2_id;
+          prevPlayer1Score = prev.player1_score;
+          prevPlayer2Score = prev.player2_score;
+          nextTurnNum = prev.current_turn_num + 1;
+        }
+
+        // The challenger (player1_id from request) picks the word first
+        const insertQuery = `
+          INSERT INTO multiplayer_games (player1_id, player2_id, word, current_turn_num, player_turn,
+                                         player1_score, player2_score, status, last_turn_time)
+          VALUES (?, ?, NULL, ?, ?, ?, ?, 'in_progress', NULL)
         `;
 
-        db.query(newSelectQuery, [newGameId], (err, newResults) => {
+        db.query(insertQuery, [consistentPlayer1Id, consistentPlayer2Id, nextTurnNum, player1_id, prevPlayer1Score, prevPlayer2Score], (err, insertResult) => {
           if (err) {
             return res.status(500).json({ error: err.message });
           }
-          return res.json({
-            game: newResults[0],
-            attempts: null,
-            newGame: true
+
+          // Retrieve the newly created turn record
+          const newGameId = insertResult.insertId;
+          const newSelectQuery = `
+            SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+                   u1.username AS player1_username, u2.username AS player2_username, player_turn,
+                   current_turn_num, word, player1_score, player2_score, status, completed_at,
+                   mpg.last_turn_time
+            FROM multiplayer_games mpg
+            LEFT JOIN users u1 ON mpg.player1_id = u1.id
+            LEFT JOIN users u2 ON mpg.player2_id = u2.id
+            WHERE mpg.id = ?
+          `;
+
+          db.query(newSelectQuery, [newGameId], (err, newResults) => {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+            return res.json({
+              game: newResults[0],
+              attempts: null,
+              newGame: true
+            });
           });
         });
       });
@@ -261,10 +296,23 @@ const retrieveSinglePlayerGame = (req, res) => {
 };
 
 const chooseWord = (req, res) => {
-  // Multiplayer: only filter by frequency >= 20 (no 365-day exclusion)
-  const query = `SELECT word FROM words WHERE frequency >= 20 ORDER BY RAND() LIMIT 12`;
+  const { player1_id, player2_id } = req.query;
 
-  db.query(query, (err, results) => {
+  // Multiplayer: frequency >= 20, exclude words this pair has played in last 365 days
+  const query = `
+    SELECT word FROM words
+    WHERE frequency >= 20
+    AND word NOT IN (
+      SELECT word FROM multiplayer_games
+      WHERE ((player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?))
+        AND word IS NOT NULL
+        AND completed_at > DATE_SUB(NOW(), INTERVAL 365 DAY)
+    )
+    ORDER BY RAND()
+    LIMIT 12
+  `;
+
+  db.query(query, [player1_id, player2_id, player2_id, player1_id], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -386,14 +434,14 @@ const updateGameWord = (req, res) => {
   });
 };
 
-// Complete current turn - player who finished will now pick a word for opponent
-// Also calculates and updates the player's score based on word difficulty and attempts
+// Complete current turn - marks this turn as completed
+// The player who finished will pick a word for opponent in a NEW turn (new row)
 const completeTurn = (req, res) => {
   const { game_id, player_id, attempts_used, won } = req.body;
-  
+
   // First, get the current game to find the word and determine which player scored
   const getGameQuery = `
-    SELECT player1_id, player2_id, word
+    SELECT player1_id, player2_id, word, player1_score, player2_score
     FROM multiplayer_games
     WHERE id = ?
   `;
@@ -424,82 +472,112 @@ const completeTurn = (req, res) => {
         const wordBaseScore = wordResults.length > 0 ? parseFloat(wordResults[0].score) : 5.0;
         const pointsEarned = calculateFinalScore(wordBaseScore, attempts_used);
 
-        // Update the game: increment score, clear word, increment turn, switch player_turn
+        // Mark this turn as completed, add points to the winner's score
+        // Word stays in the row (for history), status becomes 'completed'
         const scoreColumn = isPlayer1 ? 'player1_score' : 'player2_score';
         const updateQuery = `
           UPDATE multiplayer_games
-          SET player_turn = ?,
-              word = NULL,
-              current_turn_num = current_turn_num + 1,
+          SET status = 'completed',
+              completed_at = NOW(),
               ${scoreColumn} = ${scoreColumn} + ?,
               last_turn_time = NOW()
           WHERE id = ?
         `;
 
-        db.query(updateQuery, [player_id, pointsEarned, game_id], (err) => {
+        db.query(updateQuery, [pointsEarned, game_id], (err) => {
           if (err) {
             return res.status(500).json({ error: err.message });
           }
-          returnUpdatedGame(game_id, pointsEarned, res);
+          returnUpdatedGame(game_id, player_id, pointsEarned, res);
         });
       });
     } else {
-      // Player lost (didn't guess the word) - no points, just advance the turn
+      // Player lost (didn't guess the word) - no points, just mark completed
       const updateQuery = `
         UPDATE multiplayer_games
-        SET player_turn = ?,
-            word = NULL,
-            current_turn_num = current_turn_num + 1,
+        SET status = 'completed',
+            completed_at = NOW(),
             last_turn_time = NOW()
         WHERE id = ?
       `;
 
-      db.query(updateQuery, [player_id, game_id], (err) => {
+      db.query(updateQuery, [game_id], (err) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
-        returnUpdatedGame(game_id, 0, res);
+        returnUpdatedGame(game_id, player_id, 0, res);
       });
     }
   });
 };
 
-// Helper function to return the updated game after completeTurn
-function returnUpdatedGame(game_id, pointsEarned, res) {
-  // Delete attempts for this game (turn is complete, no longer needed)
-  const deleteAttemptsQuery = `DELETE FROM multiplayer_game_attempts WHERE game_id = ?`;
+// Helper function to create a new turn and return it after completeTurn
+// Attempts stay with the completed turn (not deleted)
+function returnUpdatedGame(completed_game_id, next_turn_player_id, pointsEarned, res) {
+  // Get the completed turn's data to carry forward scores
+  const getCompletedQuery = `
+    SELECT player1_id, player2_id, player1_score, player2_score, current_turn_num
+    FROM multiplayer_games
+    WHERE id = ?
+  `;
 
-  db.query(deleteAttemptsQuery, [game_id], (err) => {
+  db.query(getCompletedQuery, [completed_game_id], (err, completedResults) => {
     if (err) {
-      console.error('Failed to delete attempts:', err);
-      // Continue anyway - not critical
+      return res.status(500).json({ error: err.message });
     }
 
-    const selectQuery = `
-      SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
-             u1.username AS player1_username, u2.username AS player2_username, player_turn,
-             current_turn_num, word, player1_score, player2_score, status, completed_at,
-             mpg.last_turn_time
-      FROM multiplayer_games mpg
-      LEFT JOIN users u1 ON mpg.player1_id = u1.id
-      LEFT JOIN users u2 ON mpg.player2_id = u2.id
-      WHERE mpg.id = ?
+    const completed = completedResults[0];
+
+    // Create a new turn row for the player who just finished (they pick the next word)
+    const insertQuery = `
+      INSERT INTO multiplayer_games (player1_id, player2_id, word, current_turn_num, player_turn,
+                                     player1_score, player2_score, status, last_turn_time)
+      VALUES (?, ?, NULL, ?, ?, ?, ?, 'in_progress', NULL)
     `;
 
-    db.query(selectQuery, [game_id], (err, results) => {
+    const nextTurnNum = completed.current_turn_num + 1;
+
+    db.query(insertQuery, [
+      completed.player1_id,
+      completed.player2_id,
+      nextTurnNum,
+      next_turn_player_id,
+      completed.player1_score,
+      completed.player2_score
+    ], (err, insertResult) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      return res.json({ game: results[0], turnCompleted: true, pointsEarned });
+
+      // Return the newly created turn
+      const newGameId = insertResult.insertId;
+      const selectQuery = `
+        SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+               u1.username AS player1_username, u2.username AS player2_username, player_turn,
+               current_turn_num, word, player1_score, player2_score, status, completed_at,
+               mpg.last_turn_time
+        FROM multiplayer_games mpg
+        LEFT JOIN users u1 ON mpg.player1_id = u1.id
+        LEFT JOIN users u2 ON mpg.player2_id = u2.id
+        WHERE mpg.id = ?
+      `;
+
+      db.query(selectQuery, [newGameId], (err, results) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        return res.json({ game: results[0], turnCompleted: true, pointsEarned });
+      });
     });
   });
 }
 
 // Check game status for polling (lightweight - just returns player_turn and word status)
+// If the queried turn is completed, check for the latest in_progress turn for this pair
 const checkGameStatus = (req, res) => {
   const { game_id } = req.query;
 
-  const query = `SELECT player_turn, word FROM multiplayer_games WHERE id = ?`;
+  const query = `SELECT player1_id, player2_id, player_turn, word, status FROM multiplayer_games WHERE id = ?`;
 
   db.query(query, [game_id], (err, results) => {
     if (err) {
@@ -510,10 +588,49 @@ const checkGameStatus = (req, res) => {
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    return res.json({
-      player_turn: results[0].player_turn,
-      has_word: results[0].word !== null
-    });
+    const turn = results[0];
+
+    // If this turn is completed, look for the latest in_progress turn for this pair
+    if (turn.status === 'completed') {
+      const latestQuery = `
+        SELECT id AS game_id, player_turn, word, status
+        FROM multiplayer_games
+        WHERE ((player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?))
+          AND status = 'in_progress'
+        ORDER BY id DESC
+        LIMIT 1
+      `;
+
+      db.query(latestQuery, [turn.player1_id, turn.player2_id, turn.player2_id, turn.player1_id], (err, latestResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        if (latestResults.length > 0) {
+          const latest = latestResults[0];
+          return res.json({
+            player_turn: latest.player_turn,
+            has_word: latest.word !== null,
+            game_id: latest.game_id, // Include new game_id so frontend can update
+            turn_completed: true
+          });
+        } else {
+          // No in_progress turn found (shouldn't happen normally)
+          return res.json({
+            player_turn: turn.player_turn,
+            has_word: turn.word !== null,
+            turn_completed: true
+          });
+        }
+      });
+    } else {
+      // Turn is still in_progress
+      return res.json({
+        player_turn: turn.player_turn,
+        has_word: turn.word !== null,
+        turn_completed: false
+      });
+    }
   });
 };
 
@@ -536,4 +653,107 @@ const completeSinglePlayerGame = (req, res) => {
   });
 };
 
-module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord, completeTurn, checkGameStatus, completeSinglePlayerGame}
+// Get the current game state for a logged-in user (called on page refresh/app init)
+// Returns the most recent in_progress game (multiplayer or singleplayer) with attempts
+const getCurrentGame = (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  // Find the most recent in_progress game for this user (same logic as login)
+  const findGameQuery = `
+    SELECT * FROM (
+      SELECT mpg.id AS game_id, 'multiplayer' AS game_type, mpg.last_turn_time AS last_turn_time,
+             mpg.player1_id, mpg.player2_id
+      FROM multiplayer_games mpg
+      WHERE (mpg.player1_id = ? OR mpg.player2_id = ?) AND mpg.status = 'in_progress'
+
+      UNION ALL
+
+      SELECT spg.id AS game_id, 'singleplayer' AS game_type, spg.last_turn_time AS last_turn_time,
+             spg.player_id AS player1_id, NULL AS player2_id
+      FROM single_player_games spg
+      WHERE spg.player_id = ? AND spg.status = 'in_progress'
+    ) AS combined_games
+    ORDER BY last_turn_time DESC
+    LIMIT 1
+  `;
+
+  db.query(findGameQuery, [user_id, user_id, user_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (results.length === 0) {
+      // No in_progress game found
+      return res.json({ game: null, attempts: null });
+    }
+
+    const gameInfo = results[0];
+
+    // Now fetch the full game details based on game_type
+    if (gameInfo.game_type === 'multiplayer') {
+      const gameQuery = `
+        SELECT mpg.id AS game_id, 'multiplayer' AS game_type, player1_id, player2_id,
+               u1.username AS player1_username, u2.username AS player2_username, player_turn,
+               current_turn_num, word, player1_score, player2_score, status, completed_at
+        FROM multiplayer_games mpg
+        LEFT JOIN users u1 ON mpg.player1_id = u1.id
+        LEFT JOIN users u2 ON mpg.player2_id = u2.id
+        WHERE mpg.id = ?
+      `;
+
+      db.query(gameQuery, [gameInfo.game_id], (err, gameResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        const game = gameResults[0];
+
+        // If no word set, don't return attempts (they're from previous turn)
+        if (!game.word) {
+          return res.json({ game: game, attempts: null });
+        }
+
+        // Fetch attempts for this game
+        const attemptsQuery = `SELECT * FROM multiplayer_game_attempts WHERE game_id = ? ORDER BY attempt_num ASC`;
+        db.query(attemptsQuery, [gameInfo.game_id], (err, attempts) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+          return res.json({ game: game, attempts: attempts.length > 0 ? attempts : null });
+        });
+      });
+    } else {
+      // Single player
+      const gameQuery = `
+        SELECT spg.id AS game_id, 'singleplayer' AS game_type, player_id AS player1_id,
+               u.username AS player1_username, current_turn_num, word, status, completed_at
+        FROM single_player_games spg
+        LEFT JOIN users u ON spg.player_id = u.id
+        WHERE spg.id = ?
+      `;
+
+      db.query(gameQuery, [gameInfo.game_id], (err, gameResults) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        const game = gameResults[0];
+
+        // Fetch attempts
+        const attemptsQuery = `SELECT * FROM single_player_game_attempts WHERE game_id = ? ORDER BY attempt_num ASC`;
+        db.query(attemptsQuery, [gameInfo.game_id], (err, attempts) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+          return res.json({ game: game, attempts: attempts.length > 0 ? attempts : null });
+        });
+      });
+    }
+  });
+};
+
+module.exports = {getSolution, checkWord, retrieveMultiPlayerGame, retrieveSinglePlayerGame, chooseWord, getUsers, addAttempt, updateGameWord, completeTurn, checkGameStatus, completeSinglePlayerGame, getCurrentGame}

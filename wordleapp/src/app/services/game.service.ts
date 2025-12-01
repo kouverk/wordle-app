@@ -17,6 +17,7 @@ export class GameService {
   game$ = this.gameSubject.asObservable();
   private attemptsSubject = new BehaviorSubject<Attempts | null>(null);
   attempts$ = this.attemptsSubject.asObservable();
+  private initFetchId: number = 0; // Guard against stale init fetch responses
 
   constructor(
     private http: HttpClient,
@@ -24,9 +25,43 @@ export class GameService {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (isPlatformBrowser(this.platformId)) {
-      this.updateGame(this.getStoredGame());
-      this.updateAttempts(this.getStoredAttempts());
+      // Check if user is logged in, then fetch fresh game state from database
+      const userId = localStorage.getItem('user_id');
+      if (userId) {
+        this.fetchCurrentGame(Number(userId));
+      }
+      // If not logged in, game state will be null (anonymous play gets random word)
     }
+  }
+
+  // Fetch current game state from database (replaces trusting localStorage)
+  private fetchCurrentGame(userId: number): void {
+    const fetchId = ++this.initFetchId; // Increment to invalidate any in-flight requests
+    const params = new HttpParams().set('user_id', userId.toString());
+    this.http.get<{ game: Game | null; attempts: Attempts | null }>(
+      `${this.apiUrl}/get-current-game`,
+      { params }
+    ).subscribe({
+      next: (response) => {
+        // Only apply if this is still the latest fetch (no newer game load happened)
+        if (fetchId === this.initFetchId) {
+          this.updateGame(response.game);
+          this.updateAttempts(response.attempts);
+        }
+      },
+      error: (error) => {
+        console.error('Failed to fetch current game:', error);
+        // On error, clear any stale localStorage data (only if still latest)
+        if (fetchId === this.initFetchId) {
+          this.clearGameData();
+        }
+      }
+    });
+  }
+
+  // Call this to invalidate any pending init fetch (prevents stale data)
+  private invalidateInitFetch(): void {
+    this.initFetchId++;
   }
 
   getSolution(): Observable<{ word: string }> {
@@ -113,15 +148,6 @@ export class GameService {
     return null;
   }
 
-  // Retrieve attempts data from localStorage on refresh
-  private getStoredAttempts(): Attempts | null {
-    if (isPlatformBrowser(this.platformId)) {
-      const storedAttempts = localStorage.getItem('attempts');
-      return storedAttempts ? JSON.parse(storedAttempts) : null;
-    }
-    return null;
-  }
-
   // Clear game and attempts data from localStorage and BehaviorSubjects
   clearGameData() {
     if (isPlatformBrowser(this.platformId)) {
@@ -134,6 +160,8 @@ export class GameService {
 
   // Retrieve multiplayer game data and update state
   retrieveMultiPlayerGame(player1_id: number, player2_id: number) {
+    // Invalidate any pending init fetch to prevent race conditions
+    this.invalidateInitFetch();
     // Clear any existing game data first to prevent stale data display
     this.clearGameData();
 
@@ -177,6 +205,8 @@ export class GameService {
 
   // Retrieve single-player game data and update state
   retrieveSinglePlayerGame(user_id: number) {
+    // Invalidate any pending init fetch to prevent race conditions
+    this.invalidateInitFetch();
     // Clear any existing game data first to prevent stale data display
     this.clearGameData();
 
@@ -195,14 +225,18 @@ export class GameService {
       });
   }
 
-  getWordChoices() {
-    return this.http.get<any>(`${this.apiUrl}/choose-word`);
+  getWordChoices(player1_id: number, player2_id: number) {
+    const params = new HttpParams()
+      .set('player1_id', player1_id.toString())
+      .set('player2_id', player2_id.toString());
+    return this.http.get<any>(`${this.apiUrl}/choose-word`, { params });
   }
 
   // Check game status for polling (lightweight)
+  // Returns turn_completed: true if the polled turn is done and a new one exists
   checkGameStatus(game_id: number) {
     const params = new HttpParams().set('game_id', game_id.toString());
-    return this.http.get<{ player_turn: number; has_word: boolean }>(
+    return this.http.get<{ player_turn: number; has_word: boolean; game_id?: number; turn_completed?: boolean }>(
       `${this.apiUrl}/check-game-status`,
       { params }
     );
@@ -265,8 +299,9 @@ export class GameService {
         if (response.pointsEarned > 0) {
           console.log(`Earned ${response.pointsEarned} points!`);
         }
+        // Clear attempts FIRST to prevent stale attempts from triggering completion handlers again
+        this.updateAttempts(null);
         this.updateGame(response.game);
-        this.updateAttempts(null); // Clear attempts for the new round
         console.log('Navigating to /choose-word');
         this.router.navigate(['/choose-word']); // Player picks a word for opponent
       },

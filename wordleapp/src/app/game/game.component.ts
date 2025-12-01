@@ -1,8 +1,9 @@
-import { Component, OnInit, Renderer2, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Renderer2, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { MaterialModule } from '../modules/material.module';
 import { SharedModule } from '../modules/shared.module';
 import { GameService } from '../services/game.service';
 import { Game, Attempts } from '../services/interfaces'; // Ensure Attempts is imported
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-game',
@@ -11,35 +12,38 @@ import { Game, Attempts } from '../services/interfaces'; // Ensure Attempts is i
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.css'] // Fix typo from styleUrl to styleUrls
 })
-export class GameComponent implements OnInit {
+export class GameComponent implements OnInit, OnDestroy {
   game: Game | null = null;
   attempts: Attempts | null = null; // Store attempts data
-  multiplayer: boolean = false; 
+  multiplayer: boolean = false;
   board: string[][] = Array(6).fill(null).map(() => Array(5).fill('')); // 6 rows, 5 columns
   currentRow: number = 0; // To track the current row
-  currentCol: number = 0; 
+  currentCol: number = 0;
   firstRow: string[] = 'QWERTYUIOP'.split('');
   secondRow: string[] = 'ASDFGHJKL'.split('');
   thirdRow: string[] = 'ZXCVBNM'.split('');
-  solution: string = ''; 
-  currentWord: string = ''; 
-  animationInProgress: boolean = false; 
-  newFlipDelay = 400; 
-  newColorDelay = this.newFlipDelay/2; 
-  nextRowDelay = this.newFlipDelay + this.newColorDelay; 
-  waveDuration = 300; 
-  wiggleDuration = 650; 
+  solution: string = '';
+  currentWord: string = '';
+  animationInProgress: boolean = false;
+  newFlipDelay = 400;
+  newColorDelay = this.newFlipDelay/2;
+  nextRowDelay = this.newFlipDelay + this.newColorDelay;
+  waveDuration = 300;
+  wiggleDuration = 650;
   messageIsVisible: boolean = false;
   message: string = '';
   isInitialLoad: boolean = true;
   lastSubmittedRow: number = -1; // Track last row we submitted to prevent duplicates
   turnCompletionInProgress: boolean = false; // Prevent multiple completeTurn calls
+  private gameSubscription: Subscription | null = null;
+  private attemptsSubscription: Subscription | null = null;
+  private keyboardListener: (() => void) | null = null;
 
   constructor(private gameservice: GameService, private renderer: Renderer2, private el: ElementRef, private cdr: ChangeDetectorRef){}
 
   ngOnInit() {
     // Subscribe to game updates
-    this.gameservice.game$.subscribe(game => {
+    this.gameSubscription = this.gameservice.game$.subscribe(game => {
       const previousGameId = this.game?.game_id;
       this.game = game; // Update the component's game variable
 
@@ -65,7 +69,7 @@ export class GameComponent implements OnInit {
     });
 
     // Subscribe to attempts updates
-    this.gameservice.attempts$.subscribe(attempts => {
+    this.attemptsSubscription = this.gameservice.attempts$.subscribe(attempts => {
       const hadAttempts = this.attempts && this.attempts.length > 0;
       this.attempts = attempts; // Update attempts variable
       this.cdr.detectChanges();  // Manually trigger change detection
@@ -78,9 +82,21 @@ export class GameComponent implements OnInit {
     });
 
     // Listen for keyboard events using Renderer2
-    this.renderer.listen('window', 'keydown', (event: KeyboardEvent) => {
+    this.keyboardListener = this.renderer.listen('window', 'keydown', (event: KeyboardEvent) => {
       this.handleKeyPress(event);
     });
+  }
+
+  ngOnDestroy() {
+    if (this.gameSubscription) {
+      this.gameSubscription.unsubscribe();
+    }
+    if (this.attemptsSubscription) {
+      this.attemptsSubscription.unsubscribe();
+    }
+    if (this.keyboardListener) {
+      this.keyboardListener();
+    }
   }
 
   // Fetch the solution from the server
@@ -106,7 +122,7 @@ export class GameComponent implements OnInit {
     this.lastSubmittedRow = -1;
     this.isInitialLoad = true;
     this.animationInProgress = false;
-    this.turnCompletionInProgress = false; // Reset for new game
+    // Note: Don't reset turnCompletionInProgress here - it guards against multiple calls during turn transition
 
     // Clear the DOM - remove classes from all cells and keyboard keys
     const cells = this.el.nativeElement.querySelectorAll('.cell');
@@ -143,7 +159,7 @@ export class GameComponent implements OnInit {
         const lastAttempt = this.attempts[this.attempts.length - 1];
         const isGameComplete = this.attempts.length >= 6 || lastAttempt?.is_correct;
 
-        if (isGameComplete) {
+        if (isGameComplete && !this.turnCompletionInProgress) {
             console.log('Detected completed game on load, triggering completion handler');
             const won = lastAttempt?.is_correct || false;
             if (this.game?.game_type === 'singleplayer') {

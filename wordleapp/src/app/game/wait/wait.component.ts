@@ -20,6 +20,8 @@ export class WaitComponent implements OnInit, OnDestroy {
   loggedin_id: number | null = null;
   opponent_username: string | null = null;
   private pollingSubscription: Subscription | null = null;
+  private gameSubscription: Subscription | null = null;
+  private gameInitialized: boolean = false;
 
   constructor(
     private gameservice: GameService,
@@ -32,7 +34,7 @@ export class WaitComponent implements OnInit, OnDestroy {
       this.loggedin_id = Number(localStorage.getItem('user_id'));
     }
 
-    this.gameservice.game$.subscribe(game => {
+    this.gameSubscription = this.gameservice.game$.subscribe(game => {
       this.game = game;
 
       // Narrow down to MultiplayerGame using the type guard
@@ -46,8 +48,11 @@ export class WaitComponent implements OnInit, OnDestroy {
           this.opponent_username = game.player1_username;
         }
 
-        // Start polling for turn changes
-        this.startPolling();
+        // Only start polling once on first valid game load
+        if (!this.gameInitialized) {
+          this.gameInitialized = true;
+          this.startPolling();
+        }
       } else {
         // Handle non-multiplayer cases if necessary
         this.multiplayerGame = null;
@@ -57,6 +62,9 @@ export class WaitComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.stopPolling();
+    if (this.gameSubscription) {
+      this.gameSubscription.unsubscribe();
+    }
   }
 
   private startPolling() {
@@ -74,6 +82,11 @@ export class WaitComponent implements OnInit, OnDestroy {
             if (status.player_turn === this.loggedin_id && status.has_word) {
               this.stopPolling();
               // Reload the full game data before navigating
+              this.gameservice.retrieveMultiPlayerGame(this.loggedin_id!, this.getOpponentId());
+            }
+            // If the turn completed and there's a new game, reload to get latest state
+            else if (status.turn_completed && status.game_id) {
+              this.stopPolling();
               this.gameservice.retrieveMultiPlayerGame(this.loggedin_id!, this.getOpponentId());
             }
           },
