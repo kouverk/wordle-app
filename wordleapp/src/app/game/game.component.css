@@ -1,7 +1,7 @@
 /*BOARD STYLES*/
 .board-card {
     max-width: 600px;
-    margin: 12px auto; 
+    margin: 6px auto; 
     text-align: center;
     background-color: var(--color-surface);
 }
@@ -10,7 +10,7 @@
 .board {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
+    margin-bottom: 6px;
 }
 
 .row {
