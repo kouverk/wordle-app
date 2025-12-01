@@ -10,7 +10,7 @@ import { GameService } from './services/game.service';
 import { ThemeService } from './services/theme.service';
 import { AffirmationService } from './services/affirmation.service';
 import { MatExpansionPanel } from '@angular/material/expansion';
-import { User, Game } from './services/interfaces';
+import { User, Game, MultiplayerGame } from './services/interfaces';
 
 @Component({
   selector: 'app-root',
@@ -28,6 +28,12 @@ export class AppComponent {
   isDarkMode: boolean = false;
   currentGame: Game | null = null;
   gameLabel: string = '';
+  // Multiplayer score display
+  player1Username: string = '';
+  player2Username: string = '';
+  player1Score: number = 0;
+  player2Score: number = 0;
+  isMultiplayer: boolean = false;
   @ViewChild('sidenav') sidenav!: MatSidenav;
   @ViewChild('expansionPanel') expansionPanel!: MatExpansionPanel;
 
@@ -70,18 +76,28 @@ export class AppComponent {
   private updateGameLabel() {
     if (!this.currentGame) {
       this.gameLabel = '';
+      this.isMultiplayer = false;
       return;
     }
 
     if (this.currentGame.game_type === 'singleplayer') {
-      this.gameLabel = 'Single Player';
+      this.gameLabel = 'single player';
+      this.isMultiplayer = false;
     } else if (this.currentGame.game_type === 'multiplayer') {
       // Find opponent's username
       const loggedInUsername = localStorage.getItem('username');
       const opponentUsername = this.currentGame.player1_username === loggedInUsername
         ? this.currentGame.player2_username
         : this.currentGame.player1_username;
-      this.gameLabel = `Multiplayer vs ${opponentUsername}`;
+      this.gameLabel = `multi-player vs ${opponentUsername}`;
+
+      // Set up score display
+      this.isMultiplayer = true;
+      const mpGame = this.currentGame as MultiplayerGame;
+      this.player1Username = mpGame.player1_username;
+      this.player2Username = mpGame.player2_username;
+      this.player1Score = mpGame.player1_score ?? 0;
+      this.player2Score = mpGame.player2_score ?? 0;
     }
   }
 
@@ -121,8 +137,11 @@ export class AppComponent {
   logout() {
     this.sidenav.close();
     this.loggedin_id = null;
-    this.isLoggedIn = false; 
+    this.isLoggedIn = false;
     this.users = [];
+    this.currentGame = null;
+    this.gameLabel = '';
+    this.isMultiplayer = false;
     localStorage.clear();
     this.router.navigate(['/login']);
   }

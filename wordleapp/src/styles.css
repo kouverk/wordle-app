@@ -155,6 +155,18 @@ body.dark-mode .mat-mdc-outlined-button {
   color: var(--color-text-primary) !important;
 }
 
+body.dark-mode .mat-mdc-menu-panel {
+  background-color: var(--color-card-bg) !important;
+}
+
+body.dark-mode .mat-mdc-menu-item {
+  color: var(--color-text-primary) !important;
+}
+
+body.dark-mode .mat-mdc-menu-item .mat-icon {
+  color: var(--color-text-primary) !important;
+}
+
 /* ===== AFFIRMATION SNACKBAR ===== */
 .affirmation-snackbar {
   --mdc-snackbar-container-color: #8f1c94 !important;

@@ -79,18 +79,28 @@
       </button>
       <span class="game-label" *ngIf="gameLabel">{{ gameLabel }}</span>
       <span class="spacer"></span>
+      <!-- Scoreboard dropdown for multiplayer -->
+      <button mat-icon-button [matMenuTriggerFor]="scoreMenu" *ngIf="isMultiplayer" class="scoreboard">
+        <mat-icon>leaderboard</mat-icon>
+      </button>
+      <mat-menu #scoreMenu="matMenu" class="score-menu">
+        <div class="score-dropdown">
+          <div class="score-row">
+            <span class="player-name">{{ player1Username }}</span>
+            <span class="score" [ngClass]="{'score-high': player1Score > player2Score, 'score-low': player1Score < player2Score, 'score-tied': player1Score === player2Score}">{{ player1Score }}</span>
+          </div>
+          <div class="score-row">
+            <span class="player-name">{{ player2Username }}</span>
+            <span class="score" [ngClass]="{'score-high': player2Score > player1Score, 'score-low': player2Score < player1Score, 'score-tied': player1Score === player2Score}">{{ player2Score }}</span>
+          </div>
+        </div>
+      </mat-menu>
       <button mat-icon-button class="heart" (click)="showAffirmation()" *ngIf="isLoggedIn">
         <mat-icon>favorite</mat-icon>
       </button>
-      <button mat-icon-button class="settings" [matMenuTriggerFor]="settingsMenu" *ngIf="isLoggedIn">
-        <mat-icon>settings</mat-icon>
+      <button mat-icon-button class="theme-toggle" (click)="toggleDarkMode()" *ngIf="isLoggedIn">
+        <span class="material-symbols-outlined">{{ isDarkMode ? 'lightbulb' : 'light_off' }}</span>
       </button>
-      <mat-menu #settingsMenu="matMenu">
-        <button mat-menu-item (click)="toggleDarkMode()">
-          <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
-          <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
-        </button>
-      </mat-menu>
       <button mat-icon-button class="solidarity" (click)="infoSidenav.toggle()">
         <mat-icon>campaign</mat-icon>
       </button>
