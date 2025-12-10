@@ -77,7 +77,7 @@
       <button mat-icon-button class="hamburger" (click)="sidenav.toggle()">
         <mat-icon>menu</mat-icon>
       </button>
-      <span class="game-label" *ngIf="gameLabel">{{ gameLabel }}</span>
+      <span class="game-label" *ngIf="gameLabel && isLoggedIn">{{ gameLabel }}</span>
       <span class="spacer"></span>
       <!-- Scoreboard dropdown for multiplayer -->
       <button mat-icon-button [matMenuTriggerFor]="scoreMenu" *ngIf="isMultiplayer" class="scoreboard">
