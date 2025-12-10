@@ -207,3 +207,52 @@
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(143, 28, 148, 0.4);
 }
+
+/* Responsive: Small phones (iPhone SE, older devices) */
+@media (max-width: 375px) {
+    .cell {
+        width: 54px;
+        height: 54px;
+        font-size: 1.8rem;
+        margin: 2px;
+    }
+
+    .key,
+    .special-key {
+        width: 36px;
+        height: 52px;
+        font-size: 1.2em;
+        margin: 1.5px;
+    }
+
+    .special-key {
+        width: 68px;
+    }
+}
+
+/* Responsive: Very small phones (320px and below) */
+@media (max-width: 340px) {
+    .cell {
+        width: 48px;
+        height: 48px;
+        font-size: 1.6rem;
+        margin: 2px;
+    }
+
+    .key,
+    .special-key {
+        width: 30px;
+        height: 48px;
+        font-size: 1.1em;
+        margin: 1px;
+    }
+
+    .special-key {
+        width: 58px;
+    }
+
+    .message {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
