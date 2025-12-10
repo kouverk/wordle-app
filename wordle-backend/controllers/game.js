@@ -360,19 +360,30 @@ const addAttempt = (req, res) => {
       console.error('Database error at attempts insert:', err);
       return res.status(500).json({ error: err.message });
     }
-    // SQL query to retrieve all attempts for this game
-    const retrieveAttempts = `SELECT * FROM ?? WHERE game_id = ? ORDER BY attempt_num ASC`;
-    const retrieveParams = [tableName, game_id];
 
-    // Perform the retrieve query after successful insertion
-    db.query(retrieveAttempts, retrieveParams, (err, allAttempts) => {
+    // Update last_turn_time on the game table
+    const gameTable = game_type === 'multiplayer' ? 'multiplayer_games' : 'single_player_games';
+    const updateGameQuery = `UPDATE ?? SET last_turn_time = NOW() WHERE id = ?`;
+    db.query(updateGameQuery, [gameTable, game_id], (err) => {
       if (err) {
-        console.error('Database error retrieving attempts:', err);
-        return res.status(500).json({ error: err.message });
+        console.error('Database error updating last_turn_time:', err);
+        // Don't fail the whole request, just log it
       }
 
-      // Send response with all attempts after successful retrieval
-      res.status(200).json(allAttempts);
+      // SQL query to retrieve all attempts for this game
+      const retrieveAttempts = `SELECT * FROM ?? WHERE game_id = ? ORDER BY attempt_num ASC`;
+      const retrieveParams = [tableName, game_id];
+
+      // Perform the retrieve query after successful insertion
+      db.query(retrieveAttempts, retrieveParams, (err, allAttempts) => {
+        if (err) {
+          console.error('Database error retrieving attempts:', err);
+          return res.status(500).json({ error: err.message });
+        }
+
+        // Send response with all attempts after successful retrieval
+        res.status(200).json(allAttempts);
+      });
     });
   });
 };
