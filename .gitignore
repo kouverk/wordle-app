@@ -1,3 +1,8 @@
+# root 
+/node_modules/
+scratch.txt
+
+# wordleap files
 wordleapp/node_modules/
 wordle-backend/node_modules/
 wordleapp/notes/
@@ -16,5 +21,3 @@ scripts/.env
 # Database dumps (may contain sensitive data)
 scripts/wordleapp_dump.sql
 scripts/wordleapp_dump_clean.sql
-
-scratch.txt
