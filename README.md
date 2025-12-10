@@ -99,6 +99,30 @@ The app runs at `http://localhost:4200` with the API at `http://localhost:3000`.
 - `POST /complete-turn` - End current turn
 - `GET /check-game-status` - Poll game state
 
+## Testing
+
+E2E tests are powered by [Playwright](https://playwright.dev/).
+
+```bash
+# Run all tests
+npm run test
+
+# Run with interactive UI
+npm run test:ui
+
+# Run with visible browser
+npm run test:headed
+
+# Debug mode
+npm run test:debug
+```
+
+Tests run on both Chromium and Mobile Safari (iPhone 14), covering:
+- Single player game flow (login, play, persistence after refresh)
+- Multiplayer routing (choose-word, wait, game states)
+- Responsive design (board fits on mobile screens)
+- In-app browser detection and warning banner
+
 ## Scoring System
 
 Final score = `base_word_score × attempt_multiplier`

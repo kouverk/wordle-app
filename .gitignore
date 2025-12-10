@@ -16,3 +16,5 @@ scripts/.env
 # Database dumps (may contain sensitive data)
 scripts/wordleapp_dump.sql
 scripts/wordleapp_dump_clean.sql
+
+scratch.txt

@@ -1,0 +1,27 @@
+{
+  "name": "wordle-app",
+  "version": "1.0.0",
+  "description": "A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just wordle, pwincess 💕",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kouverk/wordle-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kouverk/wordle-app/issues"
+  },
+  "homepage": "https://github.com/kouverk/wordle-app#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}
