@@ -266,3 +266,25 @@ mat-toolbar {
 .score-tied {
   color: var(--color-text-secondary);
 }
+
+/* In-app browser warning banner */
+.in-app-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background-color: var(--color-present);
+  color: white;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.in-app-warning span {
+  flex: 1;
+}
+
+.in-app-warning button {
+  color: white;
+  margin-left: 8px;
+  flex-shrink: 0;
+}

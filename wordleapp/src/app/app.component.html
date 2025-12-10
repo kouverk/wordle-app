@@ -72,6 +72,14 @@
 
   <!-- Main Content -->
   <mat-sidenav-content>
+    <!-- In-app browser warning banner -->
+    <div class="in-app-warning" *ngIf="isInAppBrowser">
+      <span>For the best experience, open in Safari/Chrome. Tap <strong>⋯</strong> then <strong>"Open in Browser"</strong></span>
+      <button mat-icon-button (click)="dismissInAppWarning()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
     <!-- Toolbar -->
     <mat-toolbar>
       <button mat-icon-button class="hamburger" (click)="sidenav.toggle()">

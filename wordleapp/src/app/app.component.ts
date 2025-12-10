@@ -34,6 +34,8 @@ export class AppComponent {
   player1Score: number = 0;
   player2Score: number = 0;
   isMultiplayer: boolean = false;
+  // In-app browser detection
+  isInAppBrowser: boolean = false;
   @ViewChild('sidenav') sidenav!: MatSidenav;
   @ViewChild('expansionPanel') expansionPanel!: MatExpansionPanel;
 
@@ -51,6 +53,9 @@ export class AppComponent {
   }
 
   ngOnInit() {
+    // Detect in-app browsers (Instagram, Facebook, etc.)
+    this.isInAppBrowser = /Instagram|FBAN|FBAV|Twitter|Line|Snapchat/i.test(navigator.userAgent);
+
     // Fetch users if the user is logged in
     this.authService.isLoggedIn$.subscribe(isLoggedIn => {
       this.isLoggedIn = isLoggedIn;
@@ -163,5 +168,10 @@ export class AppComponent {
       verticalPosition: 'top',
       panelClass: ['affirmation-snackbar']
     });
+  }
+
+  // Dismiss the in-app browser warning
+  dismissInAppWarning() {
+    this.isInAppBrowser = false;
   }
 }
