@@ -256,6 +256,10 @@ const retrieveSinglePlayerGame = (req, res) => {
           return res.status(500).json({ error: err.message });
         }
 
+        if (!wordResults || wordResults.length === 0) {
+          return res.status(500).json({ error: 'No words available for new game' });
+        }
+
         const randomWord = wordResults[0].word;
 
         const insertQuery = `
@@ -663,6 +667,7 @@ const getCurrentGame = (req, res) => {
   }
 
   // Find the most recent in_progress game for this user (same logic as login)
+  // COALESCE handles NULL last_turn_time - games with NULL are treated as oldest
   const findGameQuery = `
     SELECT * FROM (
       SELECT mpg.id AS game_id, 'multiplayer' AS game_type, mpg.last_turn_time AS last_turn_time,
@@ -677,7 +682,7 @@ const getCurrentGame = (req, res) => {
       FROM single_player_games spg
       WHERE spg.player_id = ? AND spg.status = 'in_progress'
     ) AS combined_games
-    ORDER BY last_turn_time DESC
+    ORDER BY COALESCE(last_turn_time, '1970-01-01') DESC
     LIMIT 1
   `;
 

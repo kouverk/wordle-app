@@ -147,6 +147,12 @@ export class GameComponent implements OnInit, OnDestroy {
   updateBoardWithAttempts(): void {
     console.log('update board with attempts');
 
+    // If no solution is set, skip attempt processing (prevents null.split() error)
+    if (!this.solution) {
+      console.log('No solution set - skipping attempt processing');
+      return;
+    }
+
     // For multiplayer: if there's no word set, we're in "choose word" state
     // Don't process any attempts - they're from previous turns
     if (this.game?.game_type === 'multiplayer' && !this.game.word) {
@@ -266,6 +272,11 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     // Prevent duplicate submission for the same row
     if (this.currentRow === this.lastSubmittedRow) {
+      return;
+    }
+    // Prevent submission if no solution is set (broken game state)
+    if (!this.solution) {
+      this.showMessage('Game error - please start a new game', 2000);
       return;
     }
     if (this.currentCol === 5) {

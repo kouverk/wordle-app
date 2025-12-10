@@ -47,6 +47,27 @@ export class GameService {
         if (fetchId === this.initFetchId) {
           this.updateGame(response.game);
           this.updateAttempts(response.attempts);
+
+          // Route appropriately based on game state (like uponLogin does)
+          if (response.game?.game_type === 'multiplayer') {
+            const game = response.game as MultiplayerGame;
+            const isMyTurn = game.player_turn === userId;
+
+            if (isMyTurn) {
+              if (game.word) {
+                this.router.navigate(['/game']);
+              } else {
+                // No word set - need to choose a word for opponent
+                this.router.navigate(['/choose-word']);
+              }
+            } else {
+              // Not my turn - wait for opponent
+              this.router.navigate(['/wait']);
+            }
+          } else if (response.game) {
+            // Single player - go to game
+            this.router.navigate(['/game']);
+          }
         }
       },
       error: (error) => {
