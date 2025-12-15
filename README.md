@@ -1,14 +1,22 @@
 # Multiplayer Wordle 👑
 
-A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, just wordle, pwincess 💕
+A multiplayer Wordle app for playing with friends — no ads, no NYT subscription, no complicity in genocide, just wordle, pwincess 💕 
+
+Free Palestine 🇵🇸
 
 ## Live Demo
 
 Play it now: [wordle-app-vert.vercel.app](https://wordle-app-vert.vercel.app)
 
-## Why This Exists
+## Why This App Exists
 
-I refuse to support the New York Times due to their complicity in the genocide in Gaza. I also love Wordle. So I built my own.
+This app is part of the boycott of The New York Times, offering an alternative for those who want to play Wordle without supporting its Crimes.
+
+*"Language makes genocide justifiable. A reason why we are still being bombed after 243 days is because of The New York Times and most Western media" — Hossam Shabat, Palestinian journalist*
+
+American news media has been critical to maintaining Israel's death machine in gaza. And there is no American media institution more influential than The New York Times.
+
+The new york times has routinely collaborated with Israel, printed outright lies from Israeli officials, it has directed reporters to avoid terms like "slaughter" and "ethnic cleansing", and systematically evades the culpability of Israel. 
 
 Please consider joining the boycott of the NYT. Learn more at [boycottdivestunsubscribe.com](https://www.boycottdivestunsubscribe.com/).
 
