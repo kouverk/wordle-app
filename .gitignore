@@ -13,11 +13,12 @@ wordle-backend/.DS_STORE
 .nvmrc
 
 # Environment files
-.env
-*.env
-wordle-backend/.env
-scripts/.env
+**/.env
 
 # Database dumps (may contain sensitive data)
 scripts/wordleapp_dump.sql
 scripts/wordleapp_dump_clean.sql
+
+# Entropy environment 
+entropy/venv/
+**/__pycache__/
